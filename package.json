@@ -1,0 +1,49 @@
+{
+  "name": "schemory",
+  "version": "0.1.0",
+  "description": "Schemory - Don't forget your dataStructures. A dotenv for TypeScript types and JSON schemas.",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:dashboard\"",
+    "dev:server": "cd packages/schemory-server && npm run dev",
+    "dev:dashboard": "cd packages/schemory-dashboard && npm run dev",
+    "build": "npm run build:server && npm run build:dashboard && npm run build:vault",
+    "build:server": "cd packages/schemory-server && npm run build",
+    "build:dashboard": "cd packages/schemory-dashboard && npm run build",
+    "build:vault": "cd packages/schemory-vault && npm run build",
+    "lint": "npm run lint:server && npm run lint:dashboard && npm run lint:vault",
+    "lint:server": "cd packages/schemory-server && npm run lint",
+    "lint:dashboard": "cd packages/schemory-dashboard && npm run lint",
+    "lint:vault": "cd packages/schemory-vault && npm run lint",
+    "test": "npm run test:server && npm run test:vault",
+    "test:server": "cd packages/schemory-server && npm run test",
+    "test:vault": "cd packages/schemory-vault && npm run test",
+    "db:generate": "cd packages/schemory-server && npm run db:generate",
+    "db:push": "cd packages/schemory-server && npm run db:push",
+    "db:migrate": "cd packages/schemory-server && npm run db:migrate"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "typescript",
+    "schemas",
+    "types",
+    "json-schema",
+    "cli",
+    "vault"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schemory/schemory.git"
+  }
+}

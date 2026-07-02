@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # API Server with SQLite
+  server:
+    build:
+      context: .
+      dockerfile: packages/schemory-server/Dockerfile
+    container_name: schemory-server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: file:./data/schemory.db
+      PORT: 5555
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./data:/app/data
+      - ./packages/schemory-server/src:/app/src
+      - /app/node_modules
+    networks:
+      - schemory-net
+
+  # Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: packages/schemory-dashboard/Dockerfile
+    container_name: schemory-dashboard
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://schemory-server:5555
+      NODE_ENV: production
+    ports:
+      - "5173:4173"
+    networks:
+      - schemory-net
+    profiles:
+      - ui
+
+networks:
+  schemory-net:
+    driver: bridge

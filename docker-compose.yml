@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: schemory-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: schemory
+      POSTGRES_PASSWORD: schemory
+      POSTGRES_DB: schemory
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - schemory-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U schemory"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # API Server
+  server:
+    build:
+      context: .
+      dockerfile: packages/schemory-server/Dockerfile
+    container_name: schemory-server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://schemory:schemory@postgres:5432/schemory
+      PORT: 5555
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./packages/schemory-server/src:/app/src
+      - /app/node_modules
+    networks:
+      - schemory-net
+
+  # Dashboard (optional for local dev)
+  dashboard:
+    build:
+      context: .
+      dockerfile: packages/schemory-dashboard/Dockerfile
+    container_name: schemory-dashboard
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://schemory-server:5555
+      NODE_ENV: production
+    ports:
+      - "5173:4173"
+    networks:
+      - schemory-net
+    profiles:
+      - ui
+
+volumes:
+  postgres_data:
+
+networks:
+  schemory-net:
+    driver: bridge

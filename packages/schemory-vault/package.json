@@ -1,0 +1,52 @@
+{
+    "name": "schemory-vault",
+    "version": "0.1.0",
+    "description": "Schemory Vault CLI - Push and pull TypeScript types and JSON schemas",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "bin": {
+        "schemory-vault": "./bin/schemory-vault"
+    },
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsx watch src/index.ts",
+        "start": "node dist/index.js",
+        "lint": "eslint src --ext .ts",
+        "test": "vitest run",
+        "prepack": "npm run build"
+    },
+    "dependencies": {
+        "archiver": "^7.0.1",
+        "commander": "^12.0.0",
+        "cli-table3": "^0.6.5",
+        "enquirer": "^2.4.1",
+        "extract-zip": "^2.0.1",
+        "glob": "^10.3.10",
+        "minimatch": "^9.0.3",
+        "node-fetch": "^3.3.2",
+        "ora": "^8.0.1",
+        "zod": "^3.22.4"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.24",
+        "@typescript-eslint/eslint-plugin": "^7.2.0",
+        "@typescript-eslint/parser": "^7.2.0",
+        "@vitest/coverage-v8": "^1.3.1",
+        "eslint": "^8.57.0",
+        "tsx": "^4.7.2",
+        "typescript": "^5.3.3",
+        "vitest": "^1.3.1"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "keywords": [
+        "cli",
+        "typescript",
+        "schemas",
+        "vault",
+        "commander"
+    ],
+    "author": "",
+    "license": "MIT"
+}

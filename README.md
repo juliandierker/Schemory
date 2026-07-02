@@ -19,8 +19,8 @@ Schemory is an open-source tool that allows development teams to centrally store
 
 ```bash
 # Clone the repository
-git clone https://github.com/schemory/schemory.git
-cd schemory
+git clone git@github.com:juliandierker/Schemory.git
+cd Schemory
 
 # Install all dependencies (uses npm workspaces)
 npm install
@@ -182,8 +182,8 @@ Open `http://localhost:5173` in your browser.
 
 ```bash
 # Clone and start
-git clone https://github.com/schemory/schemory.git
-cd schemory
+git clone git@github.com:juliandierker/Schemory.git
+cd Schemory
 docker-compose up -d
 
 # With dashboard (uses profile)

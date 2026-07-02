@@ -44,6 +44,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/schemory/schemory.git"
+    "url": "git@github.com:juliandierker/Schemory.git"
   }
 }

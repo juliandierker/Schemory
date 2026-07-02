@@ -32,10 +32,27 @@ npm install
 ```bash
 docker-compose up -d
 ```
+Services: API on port 5555, PostgreSQL on port 5432
 
 **Option B: With SQLite (simpler, no database setup)**
 ```bash
 docker-compose -f docker-compose.sqlite.yml up -d
+```
+Services: API on port 5555
+
+**Option C: Local development (no Docker)**
+```bash
+# Start both server and dashboard in parallel (from root)
+npm run dev
+
+# Or run them separately:
+# Terminal 1: Start the API server (runs on port 5555)
+cd packages/schemory-server
+npm run dev
+
+# Terminal 2: Start the dashboard (runs on port 5173, proxies API to port 5555)
+cd packages/schemory-dashboard
+npm run dev
 ```
 
 ### 3. Initialize a Project
@@ -133,7 +150,15 @@ npx schemory-vault import --dry-run               # Preview without applying
 Run the dashboard for a visual management interface:
 
 ```bash
+# With Docker (includes dashboard service)
+docker-compose --profile ui up -d
+
+# Or from root with npm script
 npm run dev:dashboard
+
+# Or for local development (no Docker)
+cd packages/schemory-dashboard
+npm run dev
 ```
 
 Open `http://localhost:5173` in your browser.
@@ -161,22 +186,28 @@ git clone https://github.com/schemory/schemory.git
 cd schemory
 docker-compose up -d
 
+# With dashboard (uses profile)
+docker-compose --profile ui up -d
+
 # Access
 # - API: http://localhost:5555
 # - Dashboard: http://localhost:5173
+# - PostgreSQL: localhost:5432
 ```
 
-### Without Docker
+### Without Docker (Local Development)
+
+The dashboard uses Vite with a built-in proxy that forwards `/api` requests to the server on port 5555.
 
 ```bash
 # Install dependencies
 npm install
 
-# Start server
+# Start server (Fastify on port 5555, uses tsx watch)
 cd packages/schemory-server
 npm run dev
 
-# In another terminal, start dashboard
+# In another terminal, start dashboard (Vite on port 5173)
 cd packages/schemory-dashboard
 npm run dev
 ```
@@ -185,9 +216,11 @@ npm run dev
 
 - **Backend**: Node.js, Fastify, Drizzle ORM
 - **Database**: PostgreSQL or SQLite
-- **Frontend**: React, Vite, Tailwind CSS, Monaco Editor
+- **Frontend**: React, Vite 5, Tailwind CSS, Monaco Editor
+- **Dev Tools**: `tsx watch` (server), Vite (dashboard with API proxy)
 - **CLI**: Commander, Node.js
 - **Infrastructure**: Docker, Docker Compose
+- **Ports**: API server on 5555, Dashboard on 5173, PostgreSQL on 5432
 
 ## Contributing
 

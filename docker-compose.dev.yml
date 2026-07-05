@@ -1,0 +1,110 @@
+version: '3.8'
+
+# Development compose file with hot reload
+# Usage: docker compose -f docker-compose.dev.yml up
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    container_name: schemory-postgres-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: schemory
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Server - Fastify API with hot reload
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: builder  # Use builder stage for dev (has all deps including dev deps)
+    container_name: schemory-server-dev
+    command: sh -c "pnpm --filter @schemory/shared build && pnpm --filter @schemory/server dev"
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: schemory
+      ACTIVATION_BASE_URL: http://localhost:5173/auth/activate
+      RESEND_API_KEY: re_test_key
+    volumes:
+      # Mount source for hot reload
+      - ./server/src:/app/server/src:ro,delegated
+      - ./server/package.json:/app/server/package.json:ro
+      - ./server/tsconfig.json:/app/server/tsconfig.json:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro,delegated
+      - ./packages/shared/package.json:/app/packages/shared/package.json:ro
+      - ./packages/shared/tsconfig.json:/app/packages/shared/tsconfig.json:ro
+      - ./package.json:/app/package.json:ro
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
+      # Persist node_modules for faster rebuilds
+      - server_node_modules:/app/node_modules
+      - server_dist:/app/server/dist
+      - shared_dist:/app/packages/shared/dist
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # For hot reload, we use nodemon/tsx watch which is already in dev script
+    # The dev script in server/package.json is: "dev": "tsx src/index.ts"
+    # tsx has built-in watch mode
+
+  # Dashboard - React + Vite with hot reload
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+      target: builder  # Use builder stage for dev (has all deps including vite)
+    container_name: schemory-dashboard-dev
+    command: sh -c "pnpm --filter @schemory/shared build && pnpm --filter @schemory/dashboard dev"
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+      # Dashboard dev server runs on port 5173 (Vite default)
+      PORT: 5173
+      # API base URL for dashboard to connect to server
+      VITE_API_BASE_URL: http://localhost:3000
+    volumes:
+      # Mount source for hot reload
+      - ./dashboard/src:/app/dashboard/src:ro,delegated
+      - ./dashboard/index.html:/app/dashboard/index.html:ro
+      - ./dashboard/vite.config.ts:/app/dashboard/vite.config.ts:ro
+      - ./dashboard/tsconfig.json:/app/dashboard/tsconfig.json:ro
+      - ./dashboard/postcss.config.js:/app/dashboard/postcss.config.js:ro
+      - ./dashboard/tailwind.config.js:/app/dashboard/tailwind.config.js:ro
+      - ./dashboard/package.json:/app/dashboard/package.json:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro,delegated
+      - ./packages/shared/package.json:/app/packages/shared/package.json:ro
+      - ./packages/shared/tsconfig.json:/app/packages/shared/tsconfig.json:ro
+      - ./package.json:/app/package.json:ro
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
+      # Persist node_modules and build cache
+      - dashboard_node_modules:/app/node_modules
+      - dashboard_dist:/app/dashboard/dist
+    ports:
+      - "5173:5173"
+    # Dashboard doesn't depend on server, but server needs to be running for API calls
+
+volumes:
+  postgres_data_dev:
+  server_node_modules:
+  server_dist:
+  shared_dist:
+  dashboard_node_modules:
+  dashboard_dist:

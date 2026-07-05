@@ -1,0 +1,96 @@
+version: '3.8'
+
+# Production compose file
+# Usage: docker compose -f docker-compose.prod.yml up
+# 
+# Expected environment variables (from .env file or environment):
+# - DATABASE_URL: PostgreSQL connection string (e.g., postgres://user:pass@host:port/db)
+#   OR individual vars: DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+# - RESEND_API_KEY: Resend API key for sending emails
+# - EMAIL_FROM_ADDRESS: Email address for sending activation emails
+# - APP_BASE_URL: Base URL for the application (e.g., https://schemory.app)
+# - ACTIVATION_BASE_URL: Base URL for activation links (e.g., https://api.schemory.app/auth/activate)
+# - NODE_ENV: Set to "production"
+# - PORT: Server port (default: 3000)
+# - DASHBOARD_PORT: Dashboard port (default: 80)
+
+services:
+  # Server - Fastify API (production)
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      # No target specified - uses final stage (production)
+    container_name: schemory-server-prod
+    environment:
+      NODE_ENV: production
+      PORT: ${SERVER_PORT:-3000}
+      # Database configuration - can use DATABASE_URL or individual vars
+      DATABASE_URL: ${DATABASE_URL:-}
+      DB_HOST: ${DB_HOST:-}
+      DB_PORT: ${DB_PORT:-}
+      DB_USER: ${DB_USER:-}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_NAME: ${DB_NAME:-}
+      ACTIVATION_BASE_URL: ${ACTIVATION_BASE_URL:-https://api.schemory.app/auth/activate}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-}
+      APP_BASE_URL: ${APP_BASE_URL:-}
+    ports:
+      - "${SERVER_PORT:-3000}:${SERVER_PORT:-3000}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:${SERVER_PORT:-3000}/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # Note: Run migrations before starting the server
+    # Migrations are run automatically as part of the CMD in the Dockerfile
+    # If you need to run migrations separately:
+    # docker compose -f docker-compose.prod.yml run --rm server node /app/run-migrations.js
+
+  # Dashboard - React + Vite static files served by nginx (production)
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: schemory-dashboard-prod
+    environment:
+      NODE_ENV: production
+    ports:
+      - "${DASHBOARD_PORT:-80}:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      server:
+        condition: service_healthy
+
+  # Postgres - Optional for production (recommended to use external managed database)
+  # Uncomment this section if you want Postgres in Docker for production
+  # NOTE: For production, use an externally managed Postgres with proper backups
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: schemory-postgres-prod
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+  #     POSTGRES_DB: ${POSTGRES_DB:-schemory}
+  #   volumes:
+  #     - postgres_data_prod:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  # 
+  # volumes:
+  #   postgres_data_prod:

@@ -1,10 +1,12 @@
 # Dependencies
 node_modules/
-.pnpm-store/
 
 # Build outputs
 dist/
 *.tsbuildinfo
+
+# Git
+.git/
 
 # IDE
 .idea/
@@ -12,22 +14,16 @@ dist/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Environment
+# Environment files
 .env
 .env.*
 !.env.example
-.env.*.local
 
 # Logs
 *.log
-npm-debug.log*
 
 # Test
 coverage/
 
-# CLI config
-.schemory/
+# Local files
+*.local

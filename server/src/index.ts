@@ -3,11 +3,15 @@
 
 import fastify from 'fastify';
 import { authRoutes } from './routes/auth.js';
+import { teamRoutes } from './routes/teams.js';
 
 const server = fastify({ logger: true });
 
 // Register auth routes
 void server.register(authRoutes);
+
+// Register team routes
+void server.register(teamRoutes);
 
 // Health check endpoint
 server.get('/health', async () => {

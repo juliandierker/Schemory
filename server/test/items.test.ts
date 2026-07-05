@@ -81,7 +81,7 @@ async function getAccessToken(testEmailService: TestEmailService): Promise<strin
  * Helper: join a team and return the team name
  */
 async function joinTeam(accessToken: string, teamName: string): Promise<void> {
-  const response = await request('POST', `/teams/${teamName}/join`, undefined, {
+  const response = await request('POST', `/teams/${teamName}/join`, {}, {
     Authorization: `Bearer ${accessToken}`,
   });
   expect(response.statusCode).toBe(200);

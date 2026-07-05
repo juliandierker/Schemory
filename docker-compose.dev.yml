@@ -30,7 +30,7 @@ services:
       dockerfile: server/Dockerfile
       target: builder  # Use builder stage for dev (has all deps including dev deps)
     container_name: schemory-server-dev
-    command: sh -c "pnpm --filter @schemory/shared build && pnpm --filter @schemory/server dev"
+    command: sh -c "pnpm --filter @schemory/shared build && pnpm --filter @schemory/server install && DATABASE_URL=postgres://postgres:postgres@postgres:5432/schemory npx node-pg-migrate up -m /app/server/migrations && pnpm --filter @schemory/server dev"
     working_dir: /app
     environment:
       NODE_ENV: development

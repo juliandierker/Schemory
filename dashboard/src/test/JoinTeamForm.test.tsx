@@ -93,6 +93,7 @@ describe('JoinTeamForm component', () => {
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
+          body: JSON.stringify({}),
         })
       );
       expect(onSuccess).toHaveBeenCalledTimes(1);

@@ -53,6 +53,7 @@ export default function JoinTeamForm({ onSuccess }: JoinTeamFormProps) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${sessionToken || ''}`,
         },
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) {

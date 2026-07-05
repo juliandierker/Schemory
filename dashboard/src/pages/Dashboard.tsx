@@ -59,6 +59,45 @@ export default function Dashboard() {
 }`}
           </div>
         </section>
+
+        <section className="mt-8 p-6 bg-surface border border-border rounded-lg">
+          <h2 className="text-lg font-display font-semibold text-text mb-4">
+            Available Commands
+          </h2>
+          <div className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-4 py-3 border-b border-border last:border-0">
+              <code className="font-mono text-primary whitespace-nowrap">npx schemory signup &lt;email&gt;</code>
+              <span className="text-text text-opacity-70 flex-1">Register a new account and receive an activation email</span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 py-3 border-b border-border last:border-0">
+              <code className="font-mono text-primary whitespace-nowrap">npx schemory activate &lt;token&gt;</code>
+              <span className="text-text text-opacity-70 flex-1">Activate your account with the token from the email</span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 py-3 border-b border-border last:border-0">
+              <code className="font-mono text-primary whitespace-nowrap">npx schemory login &lt;token&gt;</code>
+              <span className="text-text text-opacity-70 flex-1">Authenticate the CLI with your access token</span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 py-3 border-b border-border last:border-0">
+              <code className="font-mono text-primary whitespace-nowrap">npx schemory join &lt;team&gt;</code>
+              <span className="text-text text-opacity-70 flex-1">Join or create a team</span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 py-3 border-b border-border last:border-0">
+              <code className="font-mono text-primary whitespace-nowrap">npx schemory push &lt;name&gt;</code>
+              <span className="text-text text-opacity-70 flex-1">Push a TypeScript type or JSON schema to your team</span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 py-3 border-b border-border last:border-0">
+              <code className="font-mono text-primary whitespace-nowrap">npx schemory pull &lt;name&gt;</code>
+              <span className="text-text text-opacity-70 flex-1">Pull a specific type or schema from your team</span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 py-3 border-b border-border last:border-0">
+              <code className="font-mono text-primary whitespace-nowrap">npx schemory pullAll</code>
+              <span className="text-text text-opacity-70 flex-1">Pull all types and schemas from your team</span>
+            </div>
+          </div>
+          <p className="text-text text-opacity-60 text-sm mt-4">
+            Set API URL for local dev: <code className="font-mono bg-border px-1 rounded">SCHEMORY_API_URL=http://localhost:3000</code>
+          </p>
+        </section>
       </main>
     </div>
   );

@@ -113,7 +113,7 @@ describe('team routes', () => {
 
     // Step 2: Join a new team
     const teamName = `test-team-${Date.now()}`;
-    const joinResponse = await request('POST', `/teams/${teamName}/join`, undefined, {
+    const joinResponse = await request('POST', `/teams/${teamName}/join`, {}, {
       Authorization: `Bearer ${accessToken}`,
     });
 
@@ -144,7 +144,7 @@ describe('team routes', () => {
     expect(membershipRow.joined_at).toBeDefined();
 
     // Step 4: Joining again should be idempotent (no duplicate row)
-    const joinAgainResponse = await request('POST', `/teams/${teamName}/join`, undefined, {
+    const joinAgainResponse = await request('POST', `/teams/${teamName}/join`, {}, {
       Authorization: `Bearer ${accessToken}`,
     });
 
@@ -165,7 +165,7 @@ describe('team routes', () => {
 
   it('join without authentication returns 401', async () => {
     const teamName = `test-team-unauth-${Date.now()}`;
-    const response = await request('POST', `/teams/${teamName}/join`);
+    const response = await request('POST', `/teams/${teamName}/join`, {});
 
     expect(response.statusCode).toBe(401);
     const body = response.json();
@@ -174,7 +174,7 @@ describe('team routes', () => {
 
   it('join with invalid token returns 401', async () => {
     const teamName = `test-team-invalid-${Date.now()}`;
-    const response = await request('POST', `/teams/${teamName}/join`, undefined, {
+    const response = await request('POST', `/teams/${teamName}/join`, {}, {
       Authorization: 'Bearer invalid_token_xyz',
     });
 
@@ -185,7 +185,7 @@ describe('team routes', () => {
 
   it('join with empty team name returns 400', async () => {
     const accessToken = await getAccessToken(testEmailService);
-    const response = await request('POST', '/teams/ /join', undefined, {
+    const response = await request('POST', '/teams/ /join', {}, {
       Authorization: `Bearer ${accessToken}`,
     });
 
@@ -203,7 +203,7 @@ describe('team routes', () => {
     expect(teamBefore.rows.length).toBe(0);
 
     // Join the team
-    const response = await request('POST', `/teams/${teamName}/join`, undefined, {
+    const response = await request('POST', `/teams/${teamName}/join`, {}, {
       Authorization: `Bearer ${accessToken}`,
     });
 
@@ -222,10 +222,10 @@ describe('team routes', () => {
     const teamName1 = `user-team-1-${Date.now()}`;
     const teamName2 = `user-team-2-${Date.now()}`;
 
-    await request('POST', `/teams/${teamName1}/join`, undefined, {
+    await request('POST', `/teams/${teamName1}/join`, {}, {
       Authorization: `Bearer ${accessToken}`,
     });
-    await request('POST', `/teams/${teamName2}/join`, undefined, {
+    await request('POST', `/teams/${teamName2}/join`, {}, {
       Authorization: `Bearer ${accessToken}`,
     });
 
@@ -279,12 +279,12 @@ describe('team routes', () => {
     const teamName1 = `multi-team-test-1-${Date.now()}`;
     const teamName2 = `multi-team-test-2-${Date.now()}`;
 
-    const joinResponse1 = await request('POST', `/teams/${teamName1}/join`, undefined, {
+    const joinResponse1 = await request('POST', `/teams/${teamName1}/join`, {}, {
       Authorization: `Bearer ${accessToken}`,
     });
     expect(joinResponse1.statusCode).toBe(200);
 
-    const joinResponse2 = await request('POST', `/teams/${teamName2}/join`, undefined, {
+    const joinResponse2 = await request('POST', `/teams/${teamName2}/join`, {}, {
       Authorization: `Bearer ${accessToken}`,
     });
     expect(joinResponse2.statusCode).toBe(200);

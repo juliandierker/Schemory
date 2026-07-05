@@ -29,8 +29,8 @@ export function createJoinCommand(): Command {
       setHttpClientConfig({ apiUrl, token });
       const http = getHttpClient();
 
-      // POST /teams/:team/join
-      const response = await http.post(`/teams/${encodeURIComponent(team)}/join`);
+      // POST /teams/:team/join (no body needed, team in URL)
+      const response = await http.post(`/teams/${encodeURIComponent(team)}/join`, {});
 
       if (response.error) {
         // Handle specific error cases

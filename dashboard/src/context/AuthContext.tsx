@@ -13,14 +13,26 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  // Initialize from localStorage to persist across page reloads
+  const [sessionToken, setSessionToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('schemory_session_token') || null;
+    }
+    return null;
+  });
 
   const login = (token: string) => {
     setSessionToken(token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('schemory_session_token', token);
+    }
   };
 
   const logout = () => {
     setSessionToken(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('schemory_session_token');
+    }
   };
 
   return (

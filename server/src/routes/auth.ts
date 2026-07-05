@@ -209,6 +209,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(200).send({
         user: mapDbUserToResponse(result.user),
         teams,
+        token: token, // Return the token for the dashboard to use
       });
     } catch (error: unknown) {
       console.error('Login error:', error);

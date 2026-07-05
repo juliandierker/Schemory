@@ -2,11 +2,17 @@
 // Fastify server with auth routes
 
 import fastify from 'fastify';
+import cors from '@fastify/cors';
 import { authRoutes } from './routes/auth.js';
 import { teamRoutes } from './routes/teams.js';
 import { itemRoutes } from './routes/items.js';
 
 const server = fastify({ logger: true });
+
+// Enable CORS for dashboard
+void server.register(cors, {
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173']
+});
 
 // Register auth routes
 void server.register(authRoutes);
@@ -37,3 +43,9 @@ const start = async () => {
 export { server, start };
 
 export default server;
+
+// Start the server
+start().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});

@@ -31,7 +31,7 @@ export interface UserActivationResponse {
 // Team types
 // ============================================================================
 
-export type TeamRole = 'member' | 'admin';
+export type TeamRole = "member" | "admin";
 
 export interface Team {
   id: string;
@@ -50,7 +50,7 @@ export interface TeamMember {
 // Item types
 // ============================================================================
 
-export type ItemKind = 'schema' | 'type';
+export type ItemKind = "schema" | "type";
 
 export interface Item {
   id: string;
@@ -123,10 +123,7 @@ export interface ErrorResponse {
 }
 
 // HTTP status code helpers
-export type HttpStatus = 
-  | 200 | 201 | 202 | 204
-  | 400 | 401 | 403 | 404 | 409
-  | 500;
+export type HttpStatus = 200 | 201 | 202 | 204 | 400 | 401 | 403 | 404 | 409 | 500;
 
 // ============================================================================
 // CLI Configuration types
@@ -142,5 +139,5 @@ export interface SchemoryConfig {
   teams: Team[]; // Cached list of user's teams
   defaultTeam?: string; // Default team for push/pull when ambiguous
   lastSyncAt?: string; // ISO 8601, last successful sync
-  apiUrl?: string; // Custom API URL (default: https://api.schemory.app)
+  apiUrl?: string; // Custom API URL (default: https://api.schemory.org)
 }

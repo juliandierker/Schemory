@@ -461,7 +461,7 @@ export interface SchemoryConfig {
   teams: Team[]; // Cached list of user's teams
   defaultTeam?: string; // Default team for push/pull when ambiguous
   lastSyncAt?: string; // ISO 8601, last successful sync
-  apiUrl?: string; // Custom API URL (default: https://api.schemory.app)
+  apiUrl?: string; // Custom API URL (default: https://api.schemory.org)
 }
 ```
 
@@ -482,7 +482,7 @@ export interface SchemoryConfig {
   ],
   "defaultTeam": "acme-inc",
   "lastSyncAt": "2024-07-01T12:00:00Z",
-  "apiUrl": "https://api.schemory.app"
+  "apiUrl": "https://api.schemory.org"
 }
 ```
 

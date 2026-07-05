@@ -4,6 +4,7 @@
 import fastify from 'fastify';
 import { authRoutes } from './routes/auth.js';
 import { teamRoutes } from './routes/teams.js';
+import { itemRoutes } from './routes/items.js';
 
 const server = fastify({ logger: true });
 
@@ -12,6 +13,9 @@ void server.register(authRoutes);
 
 // Register team routes
 void server.register(teamRoutes);
+
+// Register item routes
+void server.register(itemRoutes);
 
 // Health check endpoint
 server.get('/health', async () => {

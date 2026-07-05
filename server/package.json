@@ -5,23 +5,28 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "tsx test/db.test.js",
-    "test:db": "tsx scripts/test-db-setup.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:db": "tsx test/db.test.js",
     "migrate": "tsx -e \"import('node-pg-migrate').then(m => m.runner({databaseUrl: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/schemory', dir: 'migrations', direction: 'up'}))\"",
     "lint": "echo \"server: lint pass\"",
-    "dev": "echo \"server: dev mode\""
+    "dev": "tsx src/index.ts"
   },
   "dependencies": {
     "@schemory/shared": "workspace:*",
+    "bcrypt": "^5.1.1",
     "fastify": "^4.27.0",
     "pg": "^8.11.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/pg": "^8.11.6",
     "@types/node": "^20.12.12",
     "node-pg-migrate": "^7.0.0",
+    "supertest": "^6.3.3",
     "tsx": "^4.11.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
   },
   "engines": {
     "node": ">=18.0.0"

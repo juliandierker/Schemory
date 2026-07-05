@@ -162,3 +162,28 @@ export async function getUserTeams(userId: number): Promise<DbTeam[]> {
 
   return result.rows;
 }
+
+/**
+ * Team with role for a specific user
+ */
+export interface UserTeam {
+  id: number;
+  name: string;
+  role: string;
+}
+
+/**
+ * Get all teams for a user with their role in each team
+ */
+export async function getUserTeamsWithRoles(userId: number): Promise<UserTeam[]> {
+  const result = await query<UserTeam>(
+    `SELECT t.id, t.name, tm.role
+     FROM teams t
+     JOIN team_members tm ON t.id = tm.team_id
+     WHERE tm.user_id = $1
+     ORDER BY t.name`,
+    [userId]
+  );
+
+  return result.rows;
+}

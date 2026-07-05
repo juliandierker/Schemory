@@ -215,7 +215,7 @@ describe('team routes', () => {
     expect(teamAfter.rows[0].name).toBe(teamName);
   });
 
-  it('GET /teams returns users teams', async () => {
+  it('GET /teams returns users teams with role', async () => {
     const accessToken = await getAccessToken(testEmailService);
 
     // Join a couple of teams
@@ -241,6 +241,13 @@ describe('team routes', () => {
     
     const teamNames = body.teams.map((t: { name: string }) => t.name).sort();
     expect(teamNames).toEqual([teamName1, teamName2].sort());
+    
+    // Verify each team has a role
+    body.teams.forEach((team: { id: number; name: string; role: string }) => {
+      expect(team.id).toBeDefined();
+      expect(team.name).toBeDefined();
+      expect(team.role).toBe('member');
+    });
   });
 
   it('GET /teams without authentication returns 401', async () => {
@@ -249,5 +256,58 @@ describe('team routes', () => {
     expect(response.statusCode).toBe(401);
     const body = response.json();
     expect(body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('GET /teams returns empty array for user with no teams', async () => {
+    const accessToken = await getAccessToken(testEmailService);
+
+    // Don't join any teams, just get the teams list
+    const response = await request('GET', '/teams', undefined, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.teams).toBeDefined();
+    expect(body.teams).toEqual([]);
+  });
+
+  it('GET /teams returns both teams for user in two teams with correct roles', async () => {
+    const accessToken = await getAccessToken(testEmailService);
+
+    // Join two teams
+    const teamName1 = `multi-team-test-1-${Date.now()}`;
+    const teamName2 = `multi-team-test-2-${Date.now()}`;
+
+    const joinResponse1 = await request('POST', `/teams/${teamName1}/join`, undefined, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+    expect(joinResponse1.statusCode).toBe(200);
+
+    const joinResponse2 = await request('POST', `/teams/${teamName2}/join`, undefined, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+    expect(joinResponse2.statusCode).toBe(200);
+
+    // Get teams
+    const response = await request('GET', '/teams', undefined, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.teams).toBeDefined();
+    expect(body.teams.length).toBe(2);
+
+    // Verify both teams are returned with correct role
+    const teamsByName = body.teams.reduce((acc: Record<string, { id: number; role: string }>, team: { id: number; name: string; role: string }) => {
+      acc[team.name] = { id: team.id, role: team.role };
+      return acc;
+    }, {});
+
+    expect(teamsByName[teamName1]).toBeDefined();
+    expect(teamsByName[teamName1].role).toBe('member');
+    expect(teamsByName[teamName2]).toBeDefined();
+    expect(teamsByName[teamName2].role).toBe('member');
   });
 });

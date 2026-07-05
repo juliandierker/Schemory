@@ -3,7 +3,7 @@
 
 import { FastifyPluginAsync } from 'fastify';
 import { requireAuth } from '../middleware/auth.js';
-import { joinTeam, getUserTeams, DbTeam, DbTeamMember, TeamWithMembership } from '../repos/teams.js';
+import { joinTeam, getUserTeams, getUserTeamsWithRoles, DbTeam, DbTeamMember, TeamWithMembership, UserTeam } from '../repos/teams.js';
 
 // Response types
 
@@ -25,7 +25,7 @@ export interface TeamsListResponse {
   teams: {
     id: number;
     name: string;
-    createdAt: string;
+    role: string;
   }[];
 }
 
@@ -59,6 +59,17 @@ function mapDbTeamMemberToResponse(
     teamId: membership.team_id,
     role: membership.role,
     joinedAt: membership.joined_at,
+  };
+}
+
+/**
+ * Map UserTeam (team with role) to response format for GET /teams
+ */
+function mapUserTeamToResponse(team: UserTeam): TeamsListResponse['teams'][0] {
+  return {
+    id: team.id,
+    name: team.name,
+    role: team.role,
   };
 }
 
@@ -110,7 +121,7 @@ export const teamRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /teams
-  // Lists all teams the user belongs to
+  // Lists all teams the user belongs to with their role
   // Requires valid session (Bearer token)
   fastify.get<{
     Reply: TeamsListResponse | ErrorResponse;
@@ -121,10 +132,10 @@ export const teamRoutes: FastifyPluginAsync = async (fastify) => {
     const user = request.user!;
 
     try {
-      const teams = await getUserTeams(user.id);
+      const teams = await getUserTeamsWithRoles(user.id);
 
       return reply.status(200).send({
-        teams: teams.map(mapDbTeamToResponse),
+        teams: teams.map(mapUserTeamToResponse),
       });
     } catch (error: unknown) {
       console.error('Get teams error:', error);

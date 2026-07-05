@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design Tokens - CSS Custom Properties */
+/* See docs/dashboard-tokens.md for the locked reference */
+:root {
+  /* Colors - grounded in schemas/types: structured, precise */
+  --color-primary: #4F46E5;    /* Indigo purple - evokes type annotation precision */
+  --color-valid: #10B981;      /* Emerald green - success/validated schemas */
+  --color-error: #EF4444;      /* Red - error/invalid schemas */
+  --color-surface: #FFFFFF;    /* Primary background surface */
+  --color-text: #1E293B;       /* Primary text - slate-800, high contrast */
+  --color-border: #E2E8F0;     /* Subtle borders - slate-200 */
+
+  /* Fonts */
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+
+#root {
+  height: 100%;
+}
+
+/* Type Plate - Signature layout detail for schema/type content */
+.type-plate {
+  font-family: var(--font-mono);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+}

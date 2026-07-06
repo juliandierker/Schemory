@@ -73,15 +73,7 @@ export default function ItemDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface p-8">
-        <header className="mb-8">
-          <Link
-            to="/items"
-            className="text-text text-opacity-70 hover:text-primary transition-colors"
-          >
-            &larr; All Items
-          </Link>
-        </header>
+      <div className="p-8">
         <main>
           <p className="text-text text-opacity-70">Loading...</p>
         </main>
@@ -91,15 +83,7 @@ export default function ItemDetail() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-surface p-8">
-        <header className="mb-8">
-          <Link
-            to="/items"
-            className="text-text text-opacity-70 hover:text-primary transition-colors"
-          >
-            &larr; All Items
-          </Link>
-        </header>
+      <div className="p-8">
         <main>
           <div className="bg-surface border border-border rounded-lg p-6 max-w-2xl">
             <h2 className="text-lg font-display font-semibold text-text mb-2">
@@ -119,15 +103,7 @@ export default function ItemDetail() {
 
   if (!item) {
     return (
-      <div className="min-h-screen bg-surface p-8">
-        <header className="mb-8">
-          <Link
-            to="/items"
-            className="text-text text-opacity-70 hover:text-primary transition-colors"
-          >
-            &larr; All Items
-          </Link>
-        </header>
+      <div className="p-8">
         <main>
           <p className="text-text text-opacity-70">No item data</p>
         </main>
@@ -136,16 +112,7 @@ export default function ItemDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-surface p-8">
-      <header className="mb-8">
-        <Link
-          to="/items"
-          className="text-text text-opacity-70 hover:text-primary transition-colors"
-        >
-          &larr; All Items
-        </Link>
-      </header>
-
+    <div className="p-8">
       <main className="max-w-4xl">
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">

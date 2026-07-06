@@ -4,19 +4,7 @@ export default function Dashboard() {
   const { logout, sessionToken } = useAuth();
 
   return (
-    <div className="min-h-screen bg-surface p-8">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-display font-bold text-text">
-          Schemory Dashboard
-        </h1>
-        <button
-          onClick={logout}
-          className="px-4 py-2 border border-border rounded-md font-body text-text hover:bg-border transition-colors"
-        >
-          Log Out
-        </button>
-      </header>
-
+    <div className="p-8">
       <main className="max-w-4xl mx-auto">
         <section className="bg-surface border border-border rounded-lg p-6 mb-6">
           <h2 className="text-xl font-display font-semibold text-text mb-4">

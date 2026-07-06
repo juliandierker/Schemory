@@ -56,10 +56,7 @@ export default function Items() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface p-8">
-        <header className="mb-8">
-          <h1 className="text-2xl font-display font-bold text-text">Items</h1>
-        </header>
+      <div className="p-8">
         <main>
           <p className="text-text text-opacity-70">Loading...</p>
         </main>
@@ -69,10 +66,7 @@ export default function Items() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-surface p-8">
-        <header className="mb-8">
-          <h1 className="text-2xl font-display font-bold text-text">Items</h1>
-        </header>
+      <div className="p-8">
         <main>
           <p className="text-error">{error}</p>
         </main>
@@ -82,10 +76,7 @@ export default function Items() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-surface p-8">
-        <header className="mb-8">
-          <h1 className="text-2xl font-display font-bold text-text">Items</h1>
-        </header>
+      <div className="p-8">
         <main className="max-w-2xl">
           <div className="bg-surface border border-border rounded-lg p-6">
             <h2 className="text-lg font-display font-semibold text-text mb-4">
@@ -110,17 +101,7 @@ export default function Items() {
   }
 
   return (
-    <div className="min-h-screen bg-surface p-8">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-display font-bold text-text">Items</h1>
-        <Link
-          to="/"
-          className="px-4 py-2 border border-border rounded-md font-body text-text hover:bg-border transition-colors"
-        >
-          Back to Dashboard
-        </Link>
-      </header>
-
+    <div className="p-8">
       <main>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border">

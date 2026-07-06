@@ -66,7 +66,7 @@ export default function JoinTeamForm({ onSuccess }: JoinTeamFormProps) {
       const data: JoinTeamResponse = await response.json();
       // On success, refetch the team list via the onSuccess callback
       onSuccess();
-      setTeamName('');
+      setJoinCode('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to join team');
     } finally {

@@ -5,18 +5,60 @@
 /* Design Tokens - CSS Custom Properties */
 /* See docs/dashboard-tokens.md for the locked reference */
 :root {
-  /* Colors - grounded in schemas/types: structured, precise */
+  /* Colors - Light Theme */
   --color-primary: #4F46E5;    /* Indigo purple - evokes type annotation precision */
   --color-valid: #10B981;      /* Emerald green - success/validated schemas */
   --color-error: #EF4444;      /* Red - error/invalid schemas */
   --color-surface: #FFFFFF;    /* Primary background surface */
+  --color-surface-elevated: #F8FAFC; /* Elevated surfaces */
   --color-text: #1E293B;       /* Primary text - slate-800, high contrast */
+  --color-text-secondary: #64748B; /* Secondary text - slate-500 */
+  --color-text-muted: #94A3B8; /* Muted text - slate-400 */
   --color-border: #E2E8F0;     /* Subtle borders - slate-200 */
-
+  --color-hover: #F1F5F9;      /* Hover backgrounds */
+  
+  /* Sidebar specific */
+  --color-sidebar-bg: #F8FAFC;
+  --color-sidebar-text: #475569;
+  --color-sidebar-text-active: #1E293B;
+  --color-sidebar-border: #E2E8F0;
+  
+  /* Header specific */
+  --color-header-bg: #FFFFFF;
+  --color-header-border: #E2E8F0;
+  
   /* Fonts */
   --font-display: 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --color-primary: #6366F1;    /* Lighter indigo for dark mode visibility */
+  --color-valid: #10B981;      /* Emerald green - success/validated schemas */
+  --color-error: #EF4444;      /* Red - error/invalid schemas */
+  --color-surface: #0F172A;    /* Dark background surface - slate-900 */
+  --color-surface-elevated: #1E293B; /* Elevated surfaces - slate-800 */
+  --color-text: #F8FAFC;       /* Primary text - slate-50 */
+  --color-text-secondary: #CBD5E1; /* Secondary text - slate-300 */
+  --color-text-muted: #94A3B8; /* Muted text - slate-400 */
+  --color-border: #334155;     /* Subtle borders - slate-700 */
+  --color-hover: #334155;      /* Hover backgrounds */
+  
+  /* Sidebar specific */
+  --color-sidebar-bg: #1E293B;
+  --color-sidebar-text: #CBD5E1;
+  --color-sidebar-text-active: #F8FAFC;
+  --color-sidebar-border: #334155;
+  
+  /* Header specific */
+  --color-header-bg: #1E293B;
+  --color-header-border: #334155;
+  
+  /* Type plate adjustments for dark mode */
+  --color-type-plate-bg: #0F172A;
+  --color-type-plate-border: #334155;
 }
 
 /* Base styles */
@@ -34,18 +76,68 @@ body {
   line-height: 1.5;
   color: var(--color-text);
   background-color: var(--color-surface);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
   height: 100%;
 }
 
+/* Smooth transitions for theme switching - apply to common elements */
+body,
+button,
+input,
+select,
+textarea,
+div,
+span,
+header,
+main,
+aside,
+section,
+nav,
+ul,
+li,
+a {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Scrollbar styling for dark mode */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface-elevated);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
 /* Type Plate - Signature layout detail for schema/type content */
 .type-plate {
   font-family: var(--font-mono);
-  background-color: var(--color-surface);
+  background-color: var(--color-surface-elevated);
   border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 1rem;
   overflow-x: auto;
+}
+
+/* Utility classes for theme toggle */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

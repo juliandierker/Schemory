@@ -64,17 +64,7 @@ export default function Teams() {
   };
 
   return (
-    <div className="min-h-screen bg-surface p-8">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-display font-bold text-text">Your Teams</h1>
-        <Link
-          to="/"
-          className="px-4 py-2 border border-border rounded-md font-body text-text hover:bg-border transition-colors"
-        >
-          Back to Dashboard
-        </Link>
-      </header>
-
+    <div className="p-8">
       <main className="max-w-4xl mx-auto">
         {error && (
           <div className="bg-error bg-opacity-10 border border-error rounded-lg p-4 mb-6">

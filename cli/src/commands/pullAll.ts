@@ -15,9 +15,16 @@ export function createPullAllCommand(): Command {
       const config = readConfig();
       const apiUrl = config.apiUrl;
       const token = config.auth?.token;
+      const teams = config.teams || [];
 
       if (!token) {
         console.error('Error: You must be logged in to pull items. Please run `schemory login <token>` first.');
+        process.exit(1);
+      }
+
+      // Check that user is in at least one team
+      if (teams.length === 0) {
+        console.error('Error: You must join a team to pull items. Use `schemory create <teamName>` or `schemory join <joinCode>`.');
         process.exit(1);
       }
 

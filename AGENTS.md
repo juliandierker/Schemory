@@ -9,6 +9,7 @@ Stack preference: European or open source only.
 - **Centralized management** — all types/schemas live in one place
 - **Team collaboration** — share types/schemas across a team
 - **CLI-first** — sync via `npx schemory <command>`
+- **Team-required** — all file operations (push/pull) require being in a team
 
 ## CLI Commands (in order of use)
 
@@ -20,9 +21,11 @@ Stack preference: European or open source only.
 | 4 | `npx schemory create <teamName>` | logged in | creates a new team, returns join code |
 | 4a | `npx schemory invite <teamId>` | logged in, team member | returns the team's join code |
 | 4b | `npx schemory join <joinCode>` | logged in | joins a team via join code |
-| 5 | `npx schemory pull <schema\|type>` | joined team | pulls one item |
-| 5b | `npx schemory pullAll` | joined team | pulls all team items |
-| 5c | `npx schemory push <schema\|type>` | joined team | pushes one item |
+| 5 | `npx schemory push <filePath>` | joined team | pushes a type/schema file to team |
+| 5b | `npx schemory pull [name]` | joined team | pulls all team items, or a single item by name |
+| 5c | `npx schemory pullAll` | joined team | pulls all team items (legacy) |
+
+**Note:** Being in a team is required for all file operations (push/pull).
 
 Steps 1–2 are one-time setup. Step 3 is for authentication. Step 4 creates your first team. Steps 4a–4b are for team management. Steps 5+ repeat for sharing items.
 

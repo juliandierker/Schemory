@@ -1,17 +1,17 @@
-// join command
-// npx schemory join <joinCode>
+// create command
+// npx schemory create <teamName>
 
 import { Command } from 'commander';
 import { getHttpClient, setHttpClientConfig } from '../http.js';
 import { readConfig, addTeam, setDefaultTeam } from '../config.js';
 
-export function createJoinCommand(): Command {
-  return new Command('join')
-    .description('Join a Schemory team using a join code')
-    .argument('<joinCode>', 'Join code for the team to join')
-    .action(async (joinCode: string) => {
-      if (!joinCode || joinCode.trim().length === 0) {
-        console.error('Error: Join code is required');
+export function createCreateCommand(): Command {
+  return new Command('create')
+    .description('Create a new Schemory team')
+    .argument('<teamName>', 'Name of the team to create')
+    .action(async (teamName: string) => {
+      if (!teamName || teamName.trim().length === 0) {
+        console.error('Error: Team name is required');
         process.exit(1);
       }
 
@@ -21,7 +21,7 @@ export function createJoinCommand(): Command {
       const token = config.auth?.token;
 
       if (!token) {
-        console.error('Error: You must be logged in to join a team. Please run `schemory login <token>` first.');
+        console.error('Error: You must be logged in to create a team. Please run `schemory login <token>` first.');
         process.exit(1);
       }
 
@@ -29,8 +29,10 @@ export function createJoinCommand(): Command {
       setHttpClientConfig({ apiUrl, token });
       const http = getHttpClient();
 
-      // POST /teams/:joinCode/join (no body needed, join code in URL)
-      const response = await http.post(`/teams/${encodeURIComponent(joinCode)}/join`, {});
+      // POST /teams with team name in body
+      const response = await http.post('/teams', {
+        name: teamName.trim(),
+      });
 
       if (response.error) {
         // Handle specific error cases
@@ -38,17 +40,15 @@ export function createJoinCommand(): Command {
           console.error('Error: Unauthorized - please check your authentication token');
         } else if (response.error.code === 'INVALID_TOKEN') {
           console.error('Error: Invalid or expired access token');
-        } else if (response.error.code === 'INVALID_JOIN_CODE') {
-          console.error('Error: Invalid join code');
-        } else if (response.error.code === 'TEAM_NOT_FOUND') {
-          console.error(`Error: Team with join code '${joinCode}' not found`);
+        } else if (response.error.code === 'INVALID_TEAM_NAME') {
+          console.error('Error: Invalid team name');
         } else {
           console.error(`Error: ${response.error.message}`);
         }
         process.exit(1);
       }
 
-      if (response.status === 200 && response.data) {
+      if (response.status === 201 && response.data) {
         const data = response.data as {
           team?: { id: number | string; name: string; createdAt: string; joinCode?: string };
           membership?: { userId: number | string; teamId: number | string; role: string; joinedAt: string };
@@ -68,7 +68,15 @@ export function createJoinCommand(): Command {
             setDefaultTeam(data.team.name);
           }
 
-          console.log(`Joined team ${data.team.name}`);
+          console.log(`Created team ${data.team.name}`);
+          console.log(`Team ID: ${data.team.id}`);
+          
+          if (data.team.joinCode) {
+            console.log(`Join code: ${data.team.joinCode}`);
+            console.log('');
+            console.log('Share this join code with others to invite them to the team.');
+            console.log('They can join using: npx schemory join <joinCode>');
+          }
         } else {
           console.error('Error: No team information returned from server');
           process.exit(1);

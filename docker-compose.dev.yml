@@ -30,7 +30,7 @@ services:
       dockerfile: server/Dockerfile
       target: builder  # Use builder stage for dev (has all deps including dev deps)
     container_name: schemory-server-dev
-    command: sh -c "pnpm --filter @schemory/shared build && pnpm --filter @schemory/server install && DATABASE_URL=postgres://postgres:postgres@postgres:5432/schemory npx node-pg-migrate up -m /app/server/migrations && pnpm --filter @schemory/server dev"
+    command: sh -c "pnpm --filter @schemory/shared build && pnpm --filter @schemory/server install && sleep 3 && DATABASE_URL=postgres://postgres:postgres@postgres:5432/schemory npx node-pg-migrate up -m /app/server/migrations && pnpm --filter @schemory/server dev"
     working_dir: /app
     environment:
       NODE_ENV: development
@@ -40,7 +40,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: schemory
-      ACTIVATION_BASE_URL: http://localhost:5173/auth/activate
+      ACTIVATION_BASE_URL: http://localhost:5173/activate
       RESEND_API_KEY: re_test_key
     volumes:
       # Mount source for hot reload

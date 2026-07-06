@@ -14,8 +14,8 @@ RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 ENV PNPM_HOME=/usr/local/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
 
-# Copy root package.json and pnpm-workspace.yaml for workspace setup
-COPY package.json pnpm-workspace.yaml ./
+# Copy root package.json, pnpm-workspace.yaml, lockfile, and tsconfig for workspace setup
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 
 # Copy all package files for workspace resolution
 COPY server/package.json server/
@@ -29,6 +29,7 @@ RUN pnpm install --frozen-lockfile
 COPY server/src/ server/src/
 COPY server/tsconfig.json server/
 COPY server/migrations/ server/migrations/
+COPY server/run-migrations.js server/run-migrations.js
 COPY packages/shared/src/ packages/shared/src/
 COPY packages/shared/tsconfig.json packages/shared/
 COPY cli/src/ cli/src/
@@ -73,13 +74,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/server/migrations/ ./server/migra
 COPY --chown=nodejs:nodejs server/package.json ./server/package.json
 COPY --chown=nodejs:nodejs packages/shared/package.json ./packages/shared/package.json
 
-# Create a migration runner script that uses DATABASE_URL or DB_* env vars
-RUN echo '#!/usr/bin/env node
-const { runner } = require("/app/node_modules/node-pg-migrate");
-const databaseUrl = process.env.DATABASE_URL || 
-  `postgres://${process.env.DB_USER || "postgres"}:${process.env.DB_PASSWORD || "postgres"}@${process.env.DB_HOST || "localhost"}:${process.env.DB_PORT || "5432"}/${process.env.DB_NAME || "schemory"}`;
-runner({ databaseUrl, dir: "/app/server/migrations", direction: "up" }).catch(err => { console.error("Migration failed:", err); process.exit(1); });
-' > /app/run-migrations.js && chmod +x /app/run-migrations.js
+# Copy migration runner script
+COPY server/run-migrations.js /app/run-migrations.js
+RUN chmod +x /app/run-migrations.js
 
 # Environment variables
 ENV NODE_ENV=production

@@ -43,7 +43,8 @@ CREATE TABLE users (
 -- Teams: groups that share items
 CREATE TABLE teams (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) UNIQUE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  join_code VARCHAR(64) UNIQUE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -94,6 +95,7 @@ CREATE TABLE activation_tokens (
 ```sql
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_teams_name ON teams(name);
+CREATE INDEX idx_teams_join_code ON teams(join_code);
 CREATE INDEX idx_team_members_user ON team_members(user_id);
 CREATE INDEX idx_team_members_team ON team_members(team_id);
 CREATE INDEX idx_items_team ON items(team_id);
@@ -109,6 +111,8 @@ CREATE INDEX idx_activation_tokens_hash ON activation_tokens(token_hash);
 - `activation_tokens.expires_at` default: 24 hours from creation
 - `items.content`: JSON string for schemas, TypeScript source for types
 - `items.version`: increments on each update, used for conflict detection
+- `teams.join_code`: auto-generated unique code for team joining, stored in plaintext (not sensitive)
+- `teams.name`: UNIQUE constraint removed to allow multiple teams with same name; IDs remain unique
 
 ---
 
@@ -129,7 +133,9 @@ All responses are JSON. All authenticated routes require `Authorization: Bearer 
 
 | Method | Path | Auth | Request | Response | Status Codes |
 |--------|------|------|---------|----------|--------------|
-| POST | `/api/teams/:teamName/join` | Bearer | — | `{ team: Team, membership: TeamMember }` | 200, 401, 404, 409 |
+| POST | `/api/teams/:joinCode/join` | Bearer | — | `{ team: Team, membership: TeamMember }` | 200, 401, 404, 409 |
+| POST | `/api/teams` | Bearer | `{ name: string }` | `{ team: Team, membership: TeamMember }` | 201, 401, 400 |
+| GET | `/api/teams/:teamId/joincode` | Bearer | — | `{ joinCode: string }` | 200, 401, 403, 404 |
 | GET | `/api/teams` | Bearer | — | `{ teams: Team[] }` | 200, 401 |
 
 ### Item Routes
@@ -347,6 +353,7 @@ export type TeamRole = 'member' | 'admin';
 export interface Team {
   id: string;
   name: string;
+  joinCode?: string;
   createdAt: string;
 }
 

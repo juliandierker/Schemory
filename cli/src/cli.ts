@@ -1,11 +1,13 @@
 // Schemory CLI entry point
-// Wires up commander.js with all seven commands
+// Wires up commander.js with all commands
 
 import { Command } from 'commander';
 import { createSignupCommand } from './commands/signup.js';
 import { createActivateCommand } from './commands/activate.js';
 import { createLoginCommand } from './commands/login.js';
 import { createJoinCommand } from './commands/join.js';
+import { createCreateCommand } from './commands/create.js';
+import { createInviteCommand } from './commands/invite.js';
 import { createPullCommand } from './commands/pull.js';
 import { createPullAllCommand } from './commands/pullAll.js';
 import { createPushCommand } from './commands/push.js';
@@ -22,12 +24,14 @@ function createCLI(): Command {
     .description('Schemory CLI - Share TypeScript types and JSON schemas with your team')
     .version('0.1.0');
 
-  // Add all seven commands
+  // Add all commands
   program
     .addCommand(createSignupCommand())
     .addCommand(createActivateCommand())
     .addCommand(createLoginCommand())
+    .addCommand(createCreateCommand())
     .addCommand(createJoinCommand())
+    .addCommand(createInviteCommand())
     .addCommand(createPullCommand())
     .addCommand(createPullAllCommand())
     .addCommand(createPushCommand());

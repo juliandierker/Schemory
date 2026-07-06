@@ -2,7 +2,7 @@
 // This is the seam defined in ARCHITECTURE.md
 // Production uses Resend; dev always logs activation link as convenience
 
-import { ACTIVATION_BASE_URL, isDev } from './config.js';
+import { ACTIVATION_BASE_URL, DASHBOARD_URL, isDev } from './config.js';
 
 /**
  * Email service interface (from ARCHITECTURE.md)
@@ -18,7 +18,11 @@ export interface EmailService {
  */
 export class ResendEmailService implements EmailService {
   async sendActivationEmail(email: string, activationToken: string): Promise<void> {
-    const activationLink = `${ACTIVATION_BASE_URL}/${activationToken}`;
+    // For web flow: use activation base URL with token as query parameter
+    // The activation link goes to the dashboard where user sets their password
+    // In dev: http://localhost:5173/activate?token=act_...
+    // In prod: https://schemory.org/activate?token=act_...
+    const activationLink = `${ACTIVATION_BASE_URL}?token=${activationToken}`;
 
     // Dev convenience: always log the full activation link
     if (isDev()) {

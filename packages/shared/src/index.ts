@@ -37,6 +37,7 @@ export interface Team {
   id: string;
   name: string;
   createdAt: string;
+  joinCode?: string;
 }
 
 export interface TeamMember {

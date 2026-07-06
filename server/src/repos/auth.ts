@@ -31,6 +31,24 @@ async function verifyToken(token: string, hash: string): Promise<boolean> {
   return bcrypt.compare(token, hash);
 }
 
+// Password hash rounds - using bcrypt default of 10 is standard and secure
+const PASSWORD_HASH_ROUNDS = 10;
+
+/**
+ * Hash a password for storage using bcrypt with salt
+ */
+export async function hashPassword(password: string): Promise<string> {
+  // bcrypt automatically generates and includes a salt
+  return bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
+}
+
+/**
+ * Verify a password against its hash
+ */
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
+
 /**
  * Token types for type safety
  */
@@ -46,6 +64,7 @@ export interface DbUser {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  password_hash?: string | null;
 }
 
 /**
@@ -205,11 +224,11 @@ export async function verifyAccessToken(
 }
 
 /**
- * Get user by email (for future password-based auth if needed)
+ * Get user by email (includes password_hash for password verification)
  */
 export async function getUserByEmail(email: string): Promise<DbUser | null> {
   const result = await query<DbUser>(
-    `SELECT id, email, is_active, created_at, updated_at
+    `SELECT id, email, is_active, created_at, updated_at, password_hash
      FROM users WHERE email = $1`,
     [email]
   );
@@ -218,14 +237,71 @@ export async function getUserByEmail(email: string): Promise<DbUser | null> {
 }
 
 /**
+ * Set user password (used during activation)
+ */
+export async function setUserPassword(userId: number, password: string): Promise<void> {
+  const passwordHash = await hashPassword(password);
+  await query(
+    `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
+    [passwordHash, userId]
+  );
+}
+
+/**
  * Get user by ID
  */
 export async function getUserById(id: number): Promise<DbUser | null> {
   const result = await query<DbUser>(
-    `SELECT id, email, is_active, created_at, updated_at
+    `SELECT id, email, is_active, created_at, updated_at, password_hash
      FROM users WHERE id = $1`,
     [id]
   );
   
   return result.rows[0] || null;
+}
+
+/**
+ * Login with email and password - verifies password and generates access token
+ */
+export async function loginWithPassword(
+  email: string,
+  password: string
+): Promise<{ user: DbUser; accessToken: AccessTokenRaw } | null> {
+  // Get user by email
+  const user = await getUserByEmail(email);
+  
+  if (!user) {
+    return null; // User not found
+  }
+  
+  if (!user.is_active) {
+    return null; // User not activated
+  }
+  
+  if (!user.password_hash) {
+    return null; // No password set
+  }
+  
+  // Verify password
+  const isPasswordValid = await verifyPassword(password, user.password_hash);
+  
+  if (!isPasswordValid) {
+    return null; // Invalid password
+  }
+  
+  // Generate access token
+  const accessToken = 'sk_' + generateToken();
+  const accessTokenHash = await hashToken(accessToken);
+  
+  // Calculate expiry (1 year from now)
+  const accessExpiresAt = new Date(Date.now() + ACCESS_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
+  
+  // Store access token
+  await query(
+    `INSERT INTO auth_tokens (user_id, token_hash, expires_at)
+     VALUES ($1, $2, $3)`,
+    [user.id, accessTokenHash, accessExpiresAt.toISOString()]
+  );
+  
+  return { user, accessToken };
 }

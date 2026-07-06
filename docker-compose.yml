@@ -19,6 +19,34 @@ services:
       retries: 5
     restart: unless-stopped
 
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: schemory-server
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: schemory
+      ACTIVATION_BASE_URL: http://localhost:5173/activate
+      RESEND_API_KEY: re_test_key
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
   postgres-test:
     image: postgres:16-alpine
     container_name: schemory-postgres-test

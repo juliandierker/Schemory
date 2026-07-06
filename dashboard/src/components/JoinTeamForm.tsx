@@ -12,6 +12,7 @@ interface JoinTeamResponse {
     id: number;
     name: string;
     createdAt: string;
+    joinCode?: string;
   };
   membership: {
     userId: number;
@@ -30,7 +31,7 @@ interface ErrorResponse {
 
 export default function JoinTeamForm({ onSuccess }: JoinTeamFormProps) {
   const { sessionToken } = useAuth();
-  const [teamName, setTeamName] = useState('');
+  const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,15 +40,15 @@ export default function JoinTeamForm({ onSuccess }: JoinTeamFormProps) {
     setError(null);
 
     // Client-side validation: match server validation (non-empty after trim)
-    if (!teamName.trim()) {
-      setError('Team name is required');
+    if (!joinCode.trim()) {
+      setError('Join code is required');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/teams/${encodeURIComponent(teamName)}/join`, {
+      const response = await fetch(`${API_BASE}/teams/${encodeURIComponent(joinCode)}/join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,8 +74,8 @@ export default function JoinTeamForm({ onSuccess }: JoinTeamFormProps) {
     }
   };
 
-  const handleTeamNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setTeamName(e.target.value);
+  const handleJoinCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setJoinCode(e.target.value);
     // Clear error when user starts typing
     if (error) {
       setError(null);
@@ -84,15 +85,15 @@ export default function JoinTeamForm({ onSuccess }: JoinTeamFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="teamName" className="block text-sm font-body text-text mb-1">
-          Team Name
+        <label htmlFor="joinCode" className="block text-sm font-body text-text mb-1">
+          Join Code
         </label>
         <input
           type="text"
-          id="teamName"
-          value={teamName}
-          onChange={handleTeamNameChange}
-          placeholder="Enter team name"
+          id="joinCode"
+          value={joinCode}
+          onChange={handleJoinCodeChange}
+          placeholder="Enter join code"
           className="w-full px-3 py-2 border border-border rounded-md font-mono text-text bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
           disabled={isLoading}
           autoComplete="off"
@@ -105,7 +106,7 @@ export default function JoinTeamForm({ onSuccess }: JoinTeamFormProps) {
 
       <button
         type="submit"
-        disabled={isLoading || !teamName.trim()}
+        disabled={isLoading || !joinCode.trim()}
         className="w-full px-4 py-2 bg-primary text-white font-body rounded-md hover:bg-opacity-90 disabled:bg-opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isLoading ? 'Joining...' : 'Join Team'}

@@ -8,6 +8,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 interface UserTeam {
   id: number;
   name: string;
+  joinCode?: string;
   role: string;
 }
 
@@ -110,6 +111,9 @@ export default function Teams() {
                       Team Name
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-text text-opacity-70 uppercase tracking-wider">
+                      Join Code
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-text text-opacity-70 uppercase tracking-wider">
                       Role
                     </th>
                   </tr>
@@ -122,6 +126,11 @@ export default function Teams() {
                     >
                       <td className="px-6 py-4">
                         <span className="font-body text-text">{team.name}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="font-mono text-text text-sm">
+                          {team.joinCode || 'N/A'}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-body text-text text-opacity-70">
@@ -142,7 +151,7 @@ export default function Teams() {
             Join a Team
           </h2>
           <p className="text-text text-opacity-70 mb-4">
-            Enter a team name to join. The team will be created if it doesn't exist.
+            Enter a join code to join a team. Ask a team member to share their join code with you.
           </p>
           <div className="max-w-md">
             <JoinTeamForm onSuccess={handleJoinSuccess} />

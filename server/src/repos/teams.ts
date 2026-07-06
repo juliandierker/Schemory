@@ -10,6 +10,7 @@ export interface DbTeam {
   id: number;
   name: string;
   created_at: string;
+  join_code?: string;
 }
 
 /**
@@ -35,7 +36,7 @@ export interface TeamWithMembership {
  */
 export async function getTeamByName(name: string): Promise<DbTeam | null> {
   const result = await query<DbTeam>(
-    `SELECT id, name, created_at FROM teams WHERE name = $1`,
+    `SELECT id, name, created_at, join_code FROM teams WHERE name = $1`,
     [name]
   );
 
@@ -47,7 +48,7 @@ export async function getTeamByName(name: string): Promise<DbTeam | null> {
  */
 export async function getTeamById(id: number): Promise<DbTeam | null> {
   const result = await query<DbTeam>(
-    `SELECT id, name, created_at FROM teams WHERE id = $1`,
+    `SELECT id, name, created_at, join_code FROM teams WHERE id = $1`,
     [id]
   );
 
@@ -61,11 +62,23 @@ export async function createTeam(name: string): Promise<DbTeam> {
   const result = await query<DbTeam>(
     `INSERT INTO teams (name)
      VALUES ($1)
-     RETURNING id, name, created_at`,
+     RETURNING id, name, created_at, join_code`,
     [name]
   );
 
   return result.rows[0];
+}
+
+/**
+ * Get a team by join code
+ */
+export async function getTeamByJoinCode(joinCode: string): Promise<DbTeam | null> {
+  const result = await query<DbTeam>(
+    `SELECT id, name, created_at, join_code FROM teams WHERE join_code = $1`,
+    [joinCode]
+  );
+
+  return result.rows[0] || null;
 }
 
 /**
@@ -104,20 +117,19 @@ export async function isUserMemberOfTeam(
 }
 
 /**
- * Join a team - creates team if it doesn't exist (auto-create behavior)
+ * Join a team by join code
  * Returns the team and membership info
  * Idempotent: if user is already a member, returns existing membership
  */
-export async function joinTeam(
+export async function joinTeamByJoinCode(
   user: DbUser,
-  teamName: string
+  joinCode: string
 ): Promise<TeamWithMembership> {
-  // Try to get existing team
-  let team = await getTeamByName(teamName);
+  // Try to get team by join code
+  const team = await getTeamByJoinCode(joinCode);
 
-  // If team doesn't exist, create it (auto-create behavior)
   if (!team) {
-    team = await createTeam(teamName);
+    throw new Error('Team not found');
   }
 
   // Check if user is already a member
@@ -148,11 +160,38 @@ export async function joinTeam(
 }
 
 /**
+ * Create a new team and join it
+ * Returns the team and membership info
+ */
+export async function createAndJoinTeam(
+  user: DbUser,
+  teamName: string
+): Promise<TeamWithMembership> {
+  // Create the team
+  const team = await createTeam(teamName);
+
+  // Add user to team
+  const membershipResult = await query<DbTeamMember>(
+    `INSERT INTO team_members (user_id, team_id, role, joined_at)
+     VALUES ($1, $2, $3, NOW())
+     RETURNING user_id, team_id, role, joined_at`,
+    [user.id, team.id, 'member']
+  );
+
+  const membership = membershipResult.rows[0];
+
+  return {
+    team,
+    membership,
+  };
+}
+
+/**
  * Get all teams for a user
  */
 export async function getUserTeams(userId: number): Promise<DbTeam[]> {
   const result = await query<DbTeam>(
-    `SELECT t.id, t.name, t.created_at
+    `SELECT t.id, t.name, t.created_at, t.join_code
      FROM teams t
      JOIN team_members tm ON t.id = tm.team_id
      WHERE tm.user_id = $1
@@ -169,6 +208,7 @@ export async function getUserTeams(userId: number): Promise<DbTeam[]> {
 export interface UserTeam {
   id: number;
   name: string;
+  join_code?: string;
   role: string;
 }
 
@@ -177,7 +217,7 @@ export interface UserTeam {
  */
 export async function getUserTeamsWithRoles(userId: number): Promise<UserTeam[]> {
   const result = await query<UserTeam>(
-    `SELECT t.id, t.name, tm.role
+    `SELECT t.id, t.name, t.join_code, tm.role
      FROM teams t
      JOIN team_members tm ON t.id = tm.team_id
      WHERE tm.user_id = $1
@@ -187,3 +227,6 @@ export async function getUserTeamsWithRoles(userId: number): Promise<UserTeam[]>
 
   return result.rows;
 }
+
+// Keep old function name for backward compatibility
+export const joinTeam = joinTeamByJoinCode;

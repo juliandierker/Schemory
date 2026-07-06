@@ -2,6 +2,8 @@ import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Activate from './pages/Activate';
 import Dashboard from './pages/Dashboard';
 import Items from './pages/Items';
 import ItemDetail from './pages/ItemDetail';
@@ -12,6 +14,8 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/activate" element={<Activate />} />
         <Route
           path="/"
           element={

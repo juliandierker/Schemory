@@ -1,17 +1,93 @@
 // login command
-// npx schemory login <token>
+// npx schemory login <email>
+// Prompts for password
 
 import { Command } from 'commander';
+import { createInterface } from 'readline';
 import { getHttpClient, setHttpClientConfig } from '../http.js';
 import { readConfig, setAuthToken } from '../config.js';
 
+// Hide input for password (simple approach - use stdin directly)
+async function promptPassword(question: string): Promise<string> {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    // Disable echo for password input
+    if (process.stdin.isTTY) {
+      // @ts-ignore - stdio types
+      process.stdin.setRawMode?.(true);
+    }
+    
+    process.stdout.write(question);
+    
+    let password = '';
+    const onData = (char: Buffer) => {
+      // Enter key
+      if (char[0] === 13) {
+        cleanup();
+        resolve(password);
+        return;
+      }
+      // Backspace
+      if (char[0] === 127 || char[0] === 8) {
+        if (password.length > 0) {
+          password = password.slice(0, -1);
+          // Move cursor back, write space, move cursor back
+          process.stdout.write('\x08 \x08');
+        }
+        return;
+      }
+      // Add character to password
+      password += char.toString();
+      process.stdout.write('*');
+    };
+    
+    const onError = (err: Error) => {
+      cleanup();
+      console.error('Error reading password:', err);
+      resolve('');
+    };
+    
+    const cleanup = () => {
+      rl.close();
+      if (process.stdin.isTTY) {
+        // @ts-ignore
+        process.stdin.setRawMode?.(false);
+      }
+      process.stdout.write('\n');
+      process.stdin.off('data', onData);
+      process.stdin.off('error', onError);
+    };
+    
+    process.stdin.on('data', onData);
+    process.stdin.on('error', onError);
+    
+    // Set raw mode for password input
+    if (process.stdin.isTTY) {
+      // @ts-ignore
+      process.stdin.setRawMode(true);
+    }
+  });
+}
+
 export function createLoginCommand(): Command {
   return new Command('login')
-    .description('Authenticate the CLI with an access token')
-    .argument('<token>', 'Access token')
-    .action(async (token: string) => {
-      if (!token) {
-        console.error('Error: Access token is required');
+    .description('Authenticate the CLI with email and password')
+    .argument('<email>', 'Email address')
+    .action(async (email: string) => {
+      if (!email) {
+        console.error('Error: Email is required');
+        process.exit(1);
+      }
+
+      // Prompt for password
+      const password = await promptPassword('Enter password: ');
+      
+      if (!password) {
+        console.error('Error: Password is required');
         process.exit(1);
       }
 
@@ -19,21 +95,21 @@ export function createLoginCommand(): Command {
       const config = readConfig();
       const apiUrl = config.apiUrl;
 
-      // Configure HTTP client with API URL and token
-      setHttpClientConfig({ apiUrl, token });
+      // Configure HTTP client with API URL
+      setHttpClientConfig({ apiUrl });
       const http = getHttpClient();
 
-      // POST /auth/login with token in body
-      const response = await http.post('/auth/login', { token });
+      // POST /auth/login with email and password
+      const response = await http.post('/auth/login', { email, password });
 
       if (response.error) {
         // Handle specific error cases
-        if (response.error.code === 'MISSING_TOKEN') {
-          console.error('Error: Access token is required');
-        } else if (response.error.code === 'INVALID_TOKEN') {
-          console.error('Error: Invalid or expired access token');
-        } else if (response.error.code === 'UNAUTHORIZED') {
-          console.error('Error: Unauthorized - please check your token');
+        if (response.error.code === 'MISSING_EMAIL') {
+          console.error('Error: Email is required');
+        } else if (response.error.code === 'MISSING_PASSWORD') {
+          console.error('Error: Password is required');
+        } else if (response.error.code === 'INVALID_CREDENTIALS') {
+          console.error('Error: Invalid email or password');
         } else {
           console.error(`Error: ${response.error.message}`);
         }
@@ -44,20 +120,24 @@ export function createLoginCommand(): Command {
         const data = response.data as {
           user?: { id: number | string; email: string; isActive: boolean };
           teams?: any[];
+          accessToken?: string;
+          expiresAt?: string;
         };
+
+        if (!data.accessToken) {
+          console.error('Error: No access token received');
+          process.exit(1);
+        }
 
         // Extract user ID as string
         const userId = data.user?.id?.toString() || '';
-        
-        // For now, we don't have expiresAt from login, but we can use a default
-        // The activation endpoint returns expiresAt, but login doesn't
-        // We'll use a default of 1 year from now
-        const expiresAt = new Date(Date.now() + 24 * 365 * 60 * 60 * 1000).toISOString();
+        const expiresAt = data.expiresAt || new Date(Date.now() + 24 * 365 * 60 * 60 * 1000).toISOString();
 
         // Save token to config
-        setAuthToken(token, expiresAt, userId);
+        setAuthToken(data.accessToken, expiresAt, userId);
 
-        console.log('Logged in successfully');
+        console.log('\nLogged in successfully');
+        console.log(`User: ${data.user?.email}`);
         
         // If teams are returned, we could add them to config too
         if (data.teams && data.teams.length > 0) {

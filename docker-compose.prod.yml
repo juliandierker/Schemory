@@ -15,6 +15,26 @@ version: '3.8'
 # - DASHBOARD_PORT: Dashboard port (default: 80)
 
 services:
+  # PostgreSQL database (recommended for production to use external managed DB)
+  # Uncomment if using Docker-based Postgres for production
+  postgres:
+    image: postgres:16-alpine
+    container_name: schemory-postgres-prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-schemory}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # Server - Fastify API (production)
   server:
     build:
@@ -27,12 +47,12 @@ services:
       PORT: ${SERVER_PORT:-3000}
       # Database configuration - can use DATABASE_URL or individual vars
       DATABASE_URL: ${DATABASE_URL:-}
-      DB_HOST: ${DB_HOST:-}
-      DB_PORT: ${DB_PORT:-}
-      DB_USER: ${DB_USER:-}
-      DB_PASSWORD: ${DB_PASSWORD:-}
-      DB_NAME: ${DB_NAME:-}
-      ACTIVATION_BASE_URL: ${ACTIVATION_BASE_URL:-https://api.schemory.app/auth/activate}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-schemory}
+      ACTIVATION_BASE_URL: ${ACTIVATION_BASE_URL:-https://schemory.org/activate}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-}
       APP_BASE_URL: ${APP_BASE_URL:-}
@@ -45,10 +65,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    # Note: Run migrations before starting the server
+    depends_on:
+      postgres:
+        condition: service_healthy
     # Migrations are run automatically as part of the CMD in the Dockerfile
-    # If you need to run migrations separately:
-    # docker compose -f docker-compose.prod.yml run --rm server node /app/run-migrations.js
+    # The run-migrations.js script includes retry logic for when postgres is starting up
 
   # Dashboard - React + Vite static files served by nginx (production)
   dashboard:
@@ -71,26 +92,5 @@ services:
       server:
         condition: service_healthy
 
-  # Postgres - Optional for production (recommended to use external managed database)
-  # Uncomment this section if you want Postgres in Docker for production
-  # NOTE: For production, use an externally managed Postgres with proper backups
-  # postgres:
-  #   image: postgres:16-alpine
-  #   container_name: schemory-postgres-prod
-  #   environment:
-  #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-  #     POSTGRES_DB: ${POSTGRES_DB:-schemory}
-  #   volumes:
-  #     - postgres_data_prod:/var/lib/postgresql/data
-  #   ports:
-  #     - "5432:5432"
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 5
-  # 
-  # volumes:
-  #   postgres_data_prod:
+volumes:
+  postgres_data_prod:

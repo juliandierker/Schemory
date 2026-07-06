@@ -1,14 +1,12 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 // API base URL - Vite injects import.meta.env.VITE_API_URL at build time
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-interface LoginResponse {
-  sessionToken?: string;
-  token?: string;
-  accessToken?: string;
+interface SignupResponse {
+  status?: string;
+  message?: string;
 }
 
 interface ErrorResponse {
@@ -18,59 +16,54 @@ interface ErrorResponse {
   };
 }
 
-export default function Login() {
+export default function Signup() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetch(`${API_BASE}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          email: email.trim(),
-          password 
-        }),
+        body: JSON.stringify({ email: email.trim() }),
       });
 
       if (!response.ok) {
         const errorData: ErrorResponse = await response.json().catch(() => ({}));
-        let message = errorData.error?.message || 'Login failed';
+        let message = errorData.error?.message || 'Signup failed';
         
-        // Provide more user-friendly error messages
-        if (errorData.error?.code === 'MISSING_EMAIL') {
-          message = 'Please enter your email address';
-        } else if (errorData.error?.code === 'MISSING_PASSWORD') {
-          message = 'Please enter your password';
-        } else if (errorData.error?.code === 'INVALID_CREDENTIALS') {
-          message = 'Invalid email or password';
+        if (errorData.error?.code === 'INVALID_EMAIL') {
+          message = 'Please enter a valid email address';
+        } else if (errorData.error?.code === 'EMAIL_EXISTS') {
+          message = 'This email is already registered. Please log in.';
         }
         
         throw new Error(message);
       }
 
-      const data: LoginResponse = await response.json();
-      // API returns { accessToken } for email/password login
-      const sessionToken = data.accessToken || data.sessionToken || data.token;
+      const data: SignupResponse = await response.json();
       
-      if (!sessionToken) {
-        throw new Error('No session token received');
+      if (data.status !== 'pending') {
+        throw new Error('Signup did not complete successfully');
       }
 
-      login(sessionToken);
-      navigate('/');
+      setSuccess('Activation email sent! Please check your inbox and click the activation link to set your password.');
+      
+      // Clear the email field
+      setEmail('');
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : 'Signup failed');
     } finally {
       setIsLoading(false);
     }
@@ -80,15 +73,36 @@ export default function Login() {
     setEmail(e.target.value);
   };
 
-  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-  };
+  // If signup was successful, show success message
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface p-4">
+        <div className="w-full max-w-md text-center">
+          <h1 className="text-2xl font-display font-bold text-text mb-6">
+            Check Your Email
+          </h1>
+          <p className="text-text font-body mb-4">{success}</p>
+          <p className="text-text text-opacity-70 font-body text-sm">
+            The activation link will take you to a page where you can set your password.
+          </p>
+          <div className="mt-8">
+            <button
+              onClick={() => navigate('/login')}
+              className="px-4 py-2 bg-primary text-white font-body rounded-md hover:bg-opacity-90 transition-colors"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface p-4">
       <div className="w-full max-w-md">
         <h1 className="text-2xl font-display font-bold text-text mb-6">
-          Schemory Dashboard
+          Create Account
         </h1>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,37 +123,21 @@ export default function Login() {
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-body text-text mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={handlePasswordChange}
-              placeholder="Enter your password"
-              className="w-full px-3 py-2 border border-border rounded-md font-mono text-text bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
-              required
-              autoComplete="current-password"
-            />
-          </div>
-
           {error && (
             <p className="text-error font-body text-sm">{error}</p>
           )}
 
           <button
             type="submit"
-            disabled={isLoading || !email.trim() || !password.trim()}
+            disabled={isLoading || !email.trim()}
             className="w-full px-4 py-2 bg-primary text-white font-body rounded-md hover:bg-opacity-90 disabled:bg-opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? 'Logging in...' : 'Log In'}
+            {isLoading ? 'Sending activation email...' : 'Sign Up'}
           </button>
         </form>
 
         <p className="mt-4 text-sm text-text text-opacity-70 font-body">
-          Don't have an account? <a href="/signup" className="text-primary hover:underline">Sign up</a>
+          Already have an account? <a href="/login" className="text-primary hover:underline">Log in</a>
         </p>
       </div>
     </div>

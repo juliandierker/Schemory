@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext';
+import CodeEditor from '../components/CodeEditor';
 
 export default function Dashboard() {
   const { logout, sessionToken } = useAuth();
@@ -37,14 +38,19 @@ export default function Dashboard() {
             Type Plate Example
           </h2>
           <p className="text-text text-opacity-70 mb-2">
-            Schema and type content is displayed using the signature "type plate" styling:
+            Schema and type content is displayed using the signature "type plate" styling with syntax highlighting:
           </p>
-          <div className="type-plate">
-            {`{
-  "kind": "type",
-  "name": "User",
-  "content": "interface User { id: string; email: string; name?: string; }"
+          <div className="type-plate min-h-[200px]">
+            <CodeEditor 
+              content={`interface User {
+  id: string;
+  email: string;
+  name?: string;
+  createdAt: Date;
 }`}
+              language="typescript"
+              readOnly={true}
+            />
           </div>
         </section>
 

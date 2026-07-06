@@ -1,69 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import {
+  LogoIcon,
+  UserIcon,
+  PlusIcon,
+  SunIcon,
+  MoonIcon,
+  ChevronDownIcon,
+  LogoutIcon
+} from './icons';
 
 interface HeaderbarProps {
   onCreateTeam?: () => void;
   onCreateFile?: () => void;
 }
-
-// Simple SVG icons for minimalistic design
-const LogoIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M2 7L12 12L22 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M12 22V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const UserIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-    <path d="M12 12C12 14.2091 10.2091 16 8 16C5.79086 16 4 14.2091 4 12C4 9.79086 5.79086 8 8 8C10.2091 8 12 9.79086 12 12Z" stroke="currentColor" strokeWidth="2"/>
-    <path d="M12 2C12 2 14 4 16 6C18 8 20 10 20 12C20 14 18 16 16 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
-
-const PlusIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 5V19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const SunIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2"/>
-    <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M22 12L20 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M2 12L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M19.07 4.93L17.65 6.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M6.35 17.65L4.93 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M19.07 19.07L17.65 17.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M6.35 6.35L4.93 4.93" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
-
-const MoonIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M21 12.79C21 17.44 17.44 21 12.79 21C8.14 21 4.56 17.44 4.56 12.79C4.56 8.14 8.14 4.56 12.79 4.56C15.86 4.56 18.44 6.14 19.5 8.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const ChevronDownIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const LogoutIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
 
 export default function Headerbar({ onCreateTeam, onCreateFile }: HeaderbarProps) {
   const { theme, toggleTheme } = useTheme();

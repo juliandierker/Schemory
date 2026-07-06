@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Item } from '@schemory/shared';
 import { useAuth } from '../context/AuthContext';
 import ItemKindBadge from '../components/ItemKindBadge';
+import CodeEditor from '../components/CodeEditor';
 
 // API base URL
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -130,8 +131,12 @@ export default function ItemDetail() {
           <h2 className="text-sm font-semibold text-text text-opacity-70 uppercase tracking-wider mb-4">
             Content
           </h2>
-          <div className="type-plate">
-            <pre className="margin-0 whitespace-pre-wrap">{item.content}</pre>
+          <div className="type-plate min-h-[300px]">
+            <CodeEditor 
+              content={item.content} 
+              language={item.kind === 'schema' ? 'json' : 'typescript'}
+              readOnly={true}
+            />
           </div>
         </section>
 

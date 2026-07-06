@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import Headerbar from './Headerbar';
 import Sidebar from './Sidebar';
+import { MenuIcon } from './icons';
 
 interface LayoutProps {
   children: ReactNode;
@@ -36,15 +37,7 @@ export default function Layout({ children, onCreateTeam, onCreateFile }: LayoutP
         onClick={toggleSidebar}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-primary rounded-lg text-white"
       >
-        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          {isSidebarCollapsed ? (
-            <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          ) : (
-            <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          )}
-          <path d="M3 6H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+        <MenuIcon />
       </button>
     </div>
   );

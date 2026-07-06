@@ -9,9 +9,10 @@ import { readConfig } from '../config.js';
 
 export function createPullCommand(): Command {
   return new Command('pull')
-    .description('Pull a schema or type by name')
+    .description('Pull a schema or type by name. Usage: schemory pull <name> [outputPath]')
     .argument('<name>', 'Name of the schema or type to pull')
-    .action(async (name: string) => {
+    .argument('[outputPath]', 'Optional output file path (e.g., ./mytype.ts)')
+    .action(async (name: string, outputPath?: string) => {
       if (!name || name.trim().length === 0) {
         console.error('Error: Item name is required');
         process.exit(1);
@@ -59,18 +60,32 @@ export function createPullCommand(): Command {
         }
 
         const item = data.item;
+        let filePath: string;
         
-        // Determine file path based on item kind
-        // Schemas go to .schemory/items/schemas/{name}.json
-        // Types go to .schemory/items/types/{name}.ts
-        const itemsDir = path.join(process.cwd(), '.schemory', 'items');
-        const kindDir = path.join(itemsDir, item.kind === 'schema' ? 'schemas' : 'types');
-        const fileExt = item.kind === 'schema' ? 'json' : 'ts';
-        const filePath = path.join(kindDir, `${item.name}.${fileExt}`);
+        // If output path is provided, use it directly
+        if (outputPath) {
+          filePath = path.isAbsolute(outputPath)
+            ? outputPath
+            : path.join(process.cwd(), outputPath);
+          
+          // Ensure parent directory exists
+          const dir = path.dirname(filePath);
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true, mode: 0o755 });
+          }
+        } else {
+          // Default: save to .schemory/items/
+          // Schemas go to .schemory/items/schemas/{name}.json
+          // Types go to .schemory/items/types/{name}.ts
+          const itemsDir = path.join(process.cwd(), '.schemory', 'items');
+          const kindDir = path.join(itemsDir, item.kind === 'schema' ? 'schemas' : 'types');
+          const fileExt = item.kind === 'schema' ? 'json' : 'ts';
+          filePath = path.join(kindDir, `${item.name}.${fileExt}`);
 
-        // Ensure directory exists
-        if (!fs.existsSync(kindDir)) {
-          fs.mkdirSync(kindDir, { recursive: true, mode: 0o755 });
+          // Ensure directory exists
+          if (!fs.existsSync(kindDir)) {
+            fs.mkdirSync(kindDir, { recursive: true, mode: 0o755 });
+          }
         }
 
         // Write content to file

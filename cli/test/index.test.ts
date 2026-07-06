@@ -8,18 +8,20 @@ describe('CLI', () => {
   it('should create CLI with all commands', () => {
     const program = createCLI();
     
-    // Check that all 7 commands are registered
+    // Check that all commands are registered
     const commands = program.commands.map(c => c.name());
     
     expect(commands).toContain('signup');
     expect(commands).toContain('activate');
     expect(commands).toContain('login');
+    expect(commands).toContain('create');
     expect(commands).toContain('join');
+    expect(commands).toContain('invite');
     expect(commands).toContain('pull');
     expect(commands).toContain('pullAll');
     expect(commands).toContain('push');
     
-    expect(commands).toHaveLength(7);
+    expect(commands).toHaveLength(9);
   });
 
   it('should have correct command descriptions', () => {

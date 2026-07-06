@@ -9,11 +9,11 @@ import { readConfig } from '../config.js';
 
 export function createPushCommand(): Command {
   return new Command('push')
-    .description('Push a schema or type by name')
-    .argument('<name>', 'Name of the schema or type to push')
-    .action(async (name: string) => {
-      if (!name || name.trim().length === 0) {
-        console.error('Error: Item name is required');
+    .description('Push a schema or type. Usage: schemory push <filePath> or schemory push <name>')
+    .argument('<pathOrName>', 'File path (e.g., ./mytype.ts) or item name')
+    .action(async (pathOrName: string) => {
+      if (!pathOrName || pathOrName.trim().length === 0) {
+        console.error('Error: File path or item name is required');
         process.exit(1);
       }
 
@@ -27,28 +27,53 @@ export function createPushCommand(): Command {
         process.exit(1);
       }
 
-      // Look for the file in .schemory/items/schemas/{name}.json or .schemory/items/types/{name}.ts
-      const itemsDir = path.join(process.cwd(), '.schemory', 'items');
-      const jsonFilePath = path.join(itemsDir, 'schemas', `${name}.json`);
-      const tsFilePath = path.join(itemsDir, 'types', `${name}.ts`);
-
       let filePath: string;
       let kind: string;
       let content: string;
+      let itemName: string;
 
-      // Check if JSON file exists (schema)
-      if (fs.existsSync(jsonFilePath)) {
-        filePath = jsonFilePath;
-        kind = 'schema';
-        content = fs.readFileSync(filePath, 'utf-8');
-      } else if (fs.existsSync(tsFilePath)) {
-        // Check if TypeScript file exists (type)
-        filePath = tsFilePath;
-        kind = 'type';
+      // First, check if the argument is a file path that exists
+      const absolutePath = path.isAbsolute(pathOrName) 
+        ? pathOrName 
+        : path.join(process.cwd(), pathOrName);
+      
+      if (fs.existsSync(absolutePath) && fs.statSync(absolutePath).isFile()) {
+        // It's a file path - use it directly
+        filePath = absolutePath;
+        itemName = path.basename(filePath, path.extname(filePath));
+        
+        // Infer kind from file extension
+        const ext = path.extname(filePath).toLowerCase();
+        if (ext === '.json') {
+          kind = 'schema';
+        } else if (ext === '.ts') {
+          kind = 'type';
+        } else {
+          console.error(`Error: Unsupported file extension '${ext}'. Use .ts for types or .json for schemas.`);
+          process.exit(1);
+        }
         content = fs.readFileSync(filePath, 'utf-8');
       } else {
-        console.error(`Error: No file found for item '${name}'. Expected ${jsonFilePath} or ${tsFilePath}`);
-        process.exit(1);
+        // Backward compatibility: look in .schemory/items/schemas/{name}.json or .schemory/items/types/{name}.ts
+        const itemsDir = path.join(process.cwd(), '.schemory', 'items');
+        const jsonFilePath = path.join(itemsDir, 'schemas', `${pathOrName}.json`);
+        const tsFilePath = path.join(itemsDir, 'types', `${pathOrName}.ts`);
+        
+        itemName = pathOrName;
+        
+        if (fs.existsSync(jsonFilePath)) {
+          filePath = jsonFilePath;
+          kind = 'schema';
+          content = fs.readFileSync(filePath, 'utf-8');
+        } else if (fs.existsSync(tsFilePath)) {
+          filePath = tsFilePath;
+          kind = 'type';
+          content = fs.readFileSync(filePath, 'utf-8');
+        } else {
+          console.error(`Error: No file found for item '${pathOrName}'. Expected ${jsonFilePath} or ${tsFilePath}`);
+          console.error('Alternatively, provide a direct file path: schemory push ./mytype.ts');
+          process.exit(1);
+        }
       }
 
       // Configure HTTP client with API URL and token
@@ -62,7 +87,7 @@ export function createPushCommand(): Command {
       let lastKnownVersion: number | undefined;
 
       try {
-        const getResponse = await http.get(`/items/${encodeURIComponent(name)}`);
+        const getResponse = await http.get(`/items/${encodeURIComponent(itemName)}`);
         if (getResponse.status === 200 && getResponse.data) {
           const existingData = getResponse.data as {
             item?: { version: number };
@@ -78,7 +103,7 @@ export function createPushCommand(): Command {
       }
 
       // PUT /items/:name with { kind, content, lastKnownVersion }
-      const response = await http.put(`/items/${encodeURIComponent(name)}`, {
+      const response = await http.put(`/items/${encodeURIComponent(itemName)}`, {
         kind,
         content,
         lastKnownVersion,
@@ -108,7 +133,7 @@ export function createPushCommand(): Command {
         };
 
         if (data.item) {
-          console.log(`Pushed ${kind} '${name}' version ${data.item.version}`);
+          console.log(`Pushed ${kind} '${itemName}' version ${data.item.version}`);
         } else {
           console.error('Error: No item returned from server');
           process.exit(1);

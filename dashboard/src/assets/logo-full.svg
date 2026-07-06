@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100">
+  <path d="M40 25 Q30 25 30 38 Q30 62 40 75 Q50 85 60 85" stroke="#8B5CF6" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <line x1="65" y1="38" x2="80" y2="38" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round"/>
+  <line x1="65" y1="55" x2="80" y2="55" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round"/>
+  <path d="M90 25 Q100 25 100 38 Q100 62 90 75 Q80 85 70 85" stroke="#8B5CF6" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <text x="120" y="60" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="48" font-weight="700" fill="#1A1A1A">schemory</text>
+</svg>

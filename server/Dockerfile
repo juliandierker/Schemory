@@ -63,7 +63,10 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules/bcrypt /app/node_mod
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules/resend /app/node_modules/resend
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules/node-pg-migrate /app/node_modules/node-pg-migrate
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules/@fastify /app/node_modules/@fastify
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules/@schemory /app/node_modules/@schemory
+
+# Fix: Copy built @schemory/shared package to node_modules
+RUN mkdir -p /app/node_modules/@schemory
+COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist /app/node_modules/@schemory/shared
 
 # Copy built files from builder
 COPY --from=builder --chown=nodejs:nodejs /app/server/dist/ ./server/dist/

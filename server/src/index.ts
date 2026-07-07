@@ -1,6 +1,4 @@
 // Schemory server entry point
-// Fastify server with auth routes
-
 import cors from "@fastify/cors";
 import fastify from "fastify";
 import { authRoutes } from "./routes/auth.js";
@@ -9,13 +7,7 @@ import { teamRoutes } from "./routes/teams.js";
 
 const server = fastify({ logger: true });
 
-// Enable CORS for dashboard
-// Change lines 13-15 FROM:
-void server.register(cors, {
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
-});
-
-// TO:
+// Enable CORS for dashboard and production
 void server.register(cors, {
   origin: [
     "http://localhost:5173",
@@ -26,16 +18,12 @@ void server.register(cors, {
   ],
 });
 
-// Register auth routes
+// Register routes
 void server.register(authRoutes);
-
-// Register team routes
 void server.register(teamRoutes);
-
-// Register item routes
 void server.register(itemRoutes);
 
-// Health check endpoint
+// Health check
 server.get("/health", async () => {
   return { status: "ok" };
 });
@@ -51,12 +39,9 @@ const start = async () => {
   }
 };
 
-// Export server for testing
 export { server, start };
-
 export default server;
 
-// Start the server
 start().catch((err) => {
   console.error("Failed to start server:", err);
   process.exit(1);

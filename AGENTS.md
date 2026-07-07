@@ -17,7 +17,7 @@ Stack preference: European or open source only.
 |------|---------|----------|--------|
 | 1 | `npx schemory signup <email>` | — | sends confirmation email with activation token |
 | 2 | `npx schemory activate <act_...>` | step 1 | activates account, prompts to set password, and authenticates CLI |
-| 3 | `npx schemory login <email>` | registered account | prompts for password, authenticates CLI |
+| 3 | `npx schemory login <email>` | registered account | prompts for password, authenticates CLI, displays welcome message with icon, and shows status |
 | 3b | `npx schemory logout` | logged in | clears authentication token, logs out of current session |
 | 4 | `npx schemory create <teamName>` | logged in | creates a new team, returns join code |
 | 4a | `npx schemory invite <teamId>` | logged in, team member | returns the team's join code |
@@ -26,7 +26,8 @@ Stack preference: European or open source only.
 | 4d | `npx schemory status` | any | shows current login status, active team, and file count |
 | 4e | `npx schemory help` | any | shows available CLI commands and usage information |
 | 4f | `npx schemory sync` | logged in | syncs local CLI configuration with server data |
-| 5 | `npx schemory push <filePath>` | joined team | pushes a type/schema file to team |
+| 4g | `npx schemory completion [bash|zsh]` | any | generates shell completion script for tab autocomplete |
+| 5 | `npx schemory push <filePath>` | joined team | pushes a type/schema file to team (tab autocomplete for .ts/.json files) |
 | 5b | `npx schemory pull [name]` | joined team | pulls all team items, or a single item by name |
 | 5c | `npx schemory pullAll` | joined team | pulls all team items (legacy) |
 

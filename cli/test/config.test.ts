@@ -132,4 +132,213 @@ describe('config module', () => {
       expect(readConfig.apiUrl).toBe('https://custom.schemory.org');
     });
   });
+
+  describe('auto-set default team functionality', () => {
+    it('should auto-set single team as default when no default exists', async () => {
+      // Import the function we want to test
+      const { autoSetDefaultTeamIfSingleTeam, writeConfigTo } = await import('../src/config.js');
+      const { readConfig } = await import('../src/config.js');
+      
+      // Set up a config with one team but no default team
+      const configWithOneTeam: SchemoryConfig = {
+        version: '1',
+        auth: {
+          token: 'sk_test_token',
+          expiresAt: '2025-12-31T23:59:59Z',
+          userId: 'usr_test',
+        },
+        teams: [
+          { id: 'tm_1', name: 'single-team', createdAt: '2024-01-01T00:00:00Z' },
+        ],
+        // No defaultTeam set
+        apiUrl: 'https://api.schemory.org',
+      };
+
+      // Create the .schemory directory and write config there
+      const schemoryDir = path.join(testDir, '.schemory');
+      if (!fs.existsSync(schemoryDir)) {
+        fs.mkdirSync(schemoryDir, { recursive: true });
+      }
+      const configPath = path.join(schemoryDir, 'config.json');
+      writeConfigTo(configPath, configWithOneTeam);
+
+      // Set HOME to use our test directory
+      const originalHome = process.env.HOME;
+      process.env.HOME = testDir;
+
+      try {
+        // Call the auto-set function
+        autoSetDefaultTeamIfSingleTeam();
+
+        // Read the updated config
+        const updatedConfig = readConfig();
+        
+        // Should have auto-set the single team as default
+        expect(updatedConfig.defaultTeam).toBe('single-team');
+      } finally {
+        // Restore original HOME
+        process.env.HOME = originalHome;
+        
+        // Clean up the config file
+        if (fs.existsSync(configPath)) {
+          fs.unlinkSync(configPath);
+        }
+      }
+    });
+
+    it('should not change default team if already set', async () => {
+      // Import the function we want to test
+      const { autoSetDefaultTeamIfSingleTeam, writeConfigTo } = await import('../src/config.js');
+      const { readConfig } = await import('../src/config.js');
+      
+      // Set up a config with one team and a default team already set
+      const configWithExistingDefault: SchemoryConfig = {
+        version: '1',
+        auth: {
+          token: 'sk_test_token',
+          expiresAt: '2025-12-31T23:59:59Z',
+          userId: 'usr_test',
+        },
+        teams: [
+          { id: 'tm_1', name: 'existing-team', createdAt: '2024-01-01T00:00:00Z' },
+        ],
+        defaultTeam: 'existing-team',
+        apiUrl: 'https://api.schemory.org',
+      };
+
+      // Create the .schemory directory and write config there
+      const schemoryDir = path.join(testDir, '.schemory');
+      if (!fs.existsSync(schemoryDir)) {
+        fs.mkdirSync(schemoryDir, { recursive: true });
+      }
+      const configPath = path.join(schemoryDir, 'config.json');
+      writeConfigTo(configPath, configWithExistingDefault);
+
+      // Set HOME to use our test directory
+      const originalHome = process.env.HOME;
+      process.env.HOME = testDir;
+
+      try {
+        // Call the auto-set function
+        autoSetDefaultTeamIfSingleTeam();
+
+        // Read the updated config
+        const updatedConfig = readConfig();
+        
+        // Should keep the existing default team
+        expect(updatedConfig.defaultTeam).toBe('existing-team');
+      } finally {
+        // Restore original HOME
+        process.env.HOME = originalHome;
+        
+        // Clean up the config file
+        if (fs.existsSync(configPath)) {
+          fs.unlinkSync(configPath);
+        }
+      }
+    });
+
+    it('should not set default team when multiple teams exist', async () => {
+      // Import the function we want to test
+      const { autoSetDefaultTeamIfSingleTeam, writeConfigTo } = await import('../src/config.js');
+      const { readConfig } = await import('../src/config.js');
+      
+      // Set up a config with multiple teams and no default
+      const configWithMultipleTeams: SchemoryConfig = {
+        version: '1',
+        auth: {
+          token: 'sk_test_token',
+          expiresAt: '2025-12-31T23:59:59Z',
+          userId: 'usr_test',
+        },
+        teams: [
+          { id: 'tm_1', name: 'team-a', createdAt: '2024-01-01T00:00:00Z' },
+          { id: 'tm_2', name: 'team-b', createdAt: '2024-01-02T00:00:00Z' },
+        ],
+        // No defaultTeam set
+        apiUrl: 'https://api.schemory.org',
+      };
+
+      // Create the .schemory directory and write config there
+      const schemoryDir = path.join(testDir, '.schemory');
+      if (!fs.existsSync(schemoryDir)) {
+        fs.mkdirSync(schemoryDir, { recursive: true });
+      }
+      const configPath = path.join(schemoryDir, 'config.json');
+      writeConfigTo(configPath, configWithMultipleTeams);
+
+      // Set HOME to use our test directory
+      const originalHome = process.env.HOME;
+      process.env.HOME = testDir;
+
+      try {
+        // Call the auto-set function
+        autoSetDefaultTeamIfSingleTeam();
+
+        // Read the updated config
+        const updatedConfig = readConfig();
+        
+        // Should not have set a default team (multiple teams exist)
+        expect(updatedConfig.defaultTeam).toBeUndefined();
+      } finally {
+        // Restore original HOME
+        process.env.HOME = originalHome;
+        
+        // Clean up the config file
+        if (fs.existsSync(configPath)) {
+          fs.unlinkSync(configPath);
+        }
+      }
+    });
+
+    it('should not set default team when no teams exist', async () => {
+      // Import the function we want to test
+      const { autoSetDefaultTeamIfSingleTeam, writeConfigTo } = await import('../src/config.js');
+      const { readConfig } = await import('../src/config.js');
+      
+      // Set up a config with no teams and no default
+      const configWithNoTeams: SchemoryConfig = {
+        version: '1',
+        auth: {
+          token: 'sk_test_token',
+          expiresAt: '2025-12-31T23:59:59Z',
+          userId: 'usr_test',
+        },
+        teams: [],
+        // No defaultTeam set
+        apiUrl: 'https://api.schemory.org',
+      };
+
+      // Create the .schemory directory and write config there
+      const schemoryDir = path.join(testDir, '.schemory');
+      if (!fs.existsSync(schemoryDir)) {
+        fs.mkdirSync(schemoryDir, { recursive: true });
+      }
+      const configPath = path.join(schemoryDir, 'config.json');
+      writeConfigTo(configPath, configWithNoTeams);
+
+      // Set HOME to use our test directory
+      const originalHome = process.env.HOME;
+      process.env.HOME = testDir;
+
+      try {
+        // Call the auto-set function
+        autoSetDefaultTeamIfSingleTeam();
+
+        // Read the updated config
+        const updatedConfig = readConfig();
+        
+        // Should not have set a default team (no teams exist)
+        expect(updatedConfig.defaultTeam).toBeUndefined();
+      } finally {
+        // Restore original HOME
+        process.env.HOME = originalHome;
+        
+        // Clean up the config file
+        if (fs.existsSync(configPath)) {
+          fs.unlinkSync(configPath);
+        }
+      }
+    });
+  });
 });

@@ -68,6 +68,9 @@ export function createSyncCommand(): Command {
           writeConfig(updatedConfig);
           console.log(`Updated local config with ${serverTeams.length} team(s).`);
           
+          // Auto-select single team if applicable
+          autoSetDefaultTeamIfSingleTeam();
+          
           // Show synced teams
           if (serverTeams.length > 0) {
             console.log('\nSynced teams:');

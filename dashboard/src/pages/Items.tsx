@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Item, ItemKind } from '@schemory/shared';
 import { useAuth } from '../context/AuthContext';
+import { useCreateActions } from '../context/CreateActionsContext';
 import ItemKindBadge from '../components/ItemKindBadge';
 import Modal from '../components/Modal';
-import CreateFileForm from '../components/CreateFileForm';
 import EditFileForm from '../components/EditFileForm';
 import { PlusIcon, EditIcon, DeleteIcon } from '../components/icons';
 
@@ -44,8 +44,10 @@ function formatDate(isoString: string): string {
   });
 }
 
-export default function Items() {
+// Main Items content component
+export function ItemsContent() {
   const { sessionToken } = useAuth();
+  const { onCreateFile } = useCreateActions();
   const [items, setItems] = useState<Item[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +57,6 @@ export default function Items() {
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   
   // State for modals
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [deletingItem, setDeletingItem] = useState<Item | null>(null);
@@ -145,15 +146,6 @@ export default function Items() {
     }
   }, [selectedTeamId]);
 
-  const handleCreateSuccess = () => {
-    setIsCreateModalOpen(false);
-    if (selectedTeamId) {
-      fetchItems(selectedTeamId);
-    } else {
-      fetchItems();
-    }
-  };
-
   const handleEditSuccess = () => {
     setIsEditModalOpen(false);
     setEditingItem(null);
@@ -200,7 +192,7 @@ export default function Items() {
 
   const handleCreateFileClick = () => {
     if (selectedTeamId) {
-      setIsCreateModalOpen(true);
+      onCreateFile?.();
     } else {
       setError('Please select a team first');
     }
@@ -263,7 +255,7 @@ export default function Items() {
               <div className="mt-6">
                 <button
                   onClick={handleCreateFileClick}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-body rounded-lg hover:bg-opacity-90 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-body rounded-lg hover:bg-opacity-90 transition-colors text-sm sm:text-base"
                 >
                   <PlusIcon className="w-4 h-4" />
                   Create File
@@ -272,32 +264,19 @@ export default function Items() {
             )}
           </div>
         </main>
-        
-        {/* Create File Modal */}
-        <Modal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          title="Create New File"
-        >
-          <CreateFileForm
-            teamId={selectedTeamId ? parseInt(selectedTeamId) : teams[0]?.id || 0}
-            onSuccess={handleCreateSuccess}
-            onCancel={() => setIsCreateModalOpen(false)}
-          />
-        </Modal>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <main>
+      <div className="p-8">
+        <main>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-display font-bold text-text">Files</h1>
           {teams.length > 0 && (
             <button
               onClick={handleCreateFileClick}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-body rounded-lg hover:bg-opacity-90 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-body rounded-lg hover:bg-opacity-90 transition-colors text-sm sm:text-base"
             >
               <PlusIcon className="w-4 h-4" />
               Create File
@@ -396,7 +375,7 @@ export default function Items() {
                       </button>
                       <button
                         onClick={() => handleDeleteClick(item)}
-                        className="p-1 text-error text-opacity-70 hover:text-opacity-100 hover:bg-error hover:bg-opacity-10 rounded-md transition-colors"
+                        className="p-1 text-error text-opacity-70 hover:text-white hover:bg-error hover:bg-opacity-10 rounded-md transition-colors"
                         title="Delete"
                       >
                         <DeleteIcon />
@@ -408,19 +387,6 @@ export default function Items() {
             </tbody>
           </table>
         </div>
-
-        {/* Create File Modal */}
-        <Modal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          title="Create New File"
-        >
-          <CreateFileForm
-            teamId={selectedTeamId ? parseInt(selectedTeamId) : teams[0]?.id || 0}
-            onSuccess={handleCreateSuccess}
-            onCancel={() => setIsCreateModalOpen(false)}
-          />
-        </Modal>
 
         {/* Edit File Modal */}
         <Modal
@@ -477,4 +443,9 @@ export default function Items() {
       </main>
     </div>
   );
+}
+
+// Default export
+export default function Items() {
+  return <ItemsContent />;
 }

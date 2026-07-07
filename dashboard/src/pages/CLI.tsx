@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { CreateActionsProvider } from '../context/CreateActionsContext';
 import { CopyIcon, CheckIcon } from '../components/icons';
 
 interface CodeBlockProps {
@@ -58,7 +59,8 @@ export default function CLI() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <CreateActionsProvider onCreateTeam={undefined} onCreateFile={undefined}>
+      <div className="max-w-4xl mx-auto p-6">
       {/* Header */}
       <header className="mb-8">
         <h1 className="text-3xl font-display font-bold text-text mb-2">CLI Setup</h1>
@@ -309,9 +311,14 @@ npx schemory logout`}
               <span className="text-primary mr-2 mt-1">•</span>
               <span>Use <code className="bg-code-bg px-1 rounded font-mono">npx schemory logout</code> to end your CLI session and clear your authentication token.</span>
             </li>
+            <li className="flex items-start">
+              <span className="text-primary mr-2 mt-1">•</span>
+              <span>If you have only one team, it automatically becomes your active team - no need to run <code className="bg-code-bg px-1 rounded font-mono">npx schemory use</code>.</span>
+            </li>
           </ul>
         </div>
       </section>
-    </div>
+      </div>
+    </CreateActionsProvider>
   );
 }

@@ -3,6 +3,7 @@
 
 import { getHttpClient, setHttpClientConfig } from '../http.js';
 import { readConfig } from '../config.js';
+import { displayLogo } from './display.js';
 
 // ANSI color codes for colored output
 const GREEN_DOT = '\x1b[32m●\x1b[0m';
@@ -18,6 +19,8 @@ interface Team {
  * Display the current status (login status, teams, active team, file count)
  */
 export async function displayStatus(): Promise<void> {
+  // Display the Schemory logo
+  displayLogo();
   // Get config to check for auth token and teams
   const config = readConfig();
   const token = config.auth?.token;

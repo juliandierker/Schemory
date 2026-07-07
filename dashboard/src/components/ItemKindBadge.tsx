@@ -6,8 +6,8 @@ interface ItemKindBadgeProps {
 
 export default function ItemKindBadge({ kind }: ItemKindBadgeProps) {
   const kindStyles = {
-    type: 'bg-primary bg-opacity-10 text-primary',
-    schema: 'bg-valid bg-opacity-10 text-valid',
+    type: 'bg-primary bg-opacity-10 text-white',
+    schema: 'bg-valid bg-opacity-10 text-white',
   };
 
   return (

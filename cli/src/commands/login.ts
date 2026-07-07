@@ -153,29 +153,7 @@ export function createLoginCommand(): Command {
           autoSetDefaultTeamIfSingleTeam();
         }
 
-        // Welcome message with Schemory icon { = } in pixel style
-        console.log('');
-        // ANSI color codes for brand colors
-        const purple = '\x1b[38;2;120;120;248m'; // Brand purple #7878F8
-        const dark = '\x1b[38;2;26;26;46m';     // Dark #1A1A2E  
-        const reset = '\x1b[0m';
-        
-        // Pixel art { = } logo
-        // Left { in purple, = in purple, right } in dark
-        console.log('╭───────────────────────────────────────────────────────────╮');
-        console.log('│                                                               │');
-        console.log('│           ' + purple + '╭─────╮' + reset + '                                   │');
-        console.log('│           ' + purple + '│' + reset + '     ' + purple + '═══' + reset + '   ' + dark + '╭─────╮' + reset + '           │');
-        console.log('│           ' + purple + '│' + reset + '     ' + purple + '═══' + reset + '   ' + dark + '│' + reset + '     ' + dark + '│' + reset + '           │');
-        console.log('│           ' + purple + '╰─────╯' + reset + '   ' + dark + '╰─────╯' + reset + '           │');
-        console.log('│                                                               │');
-        console.log('│                    Welcome to Schemory! 🎉                    │');
-        console.log('│            Share TypeScript types & JSON schemas               │');
-        console.log('│                                                               │');
-        console.log('╰───────────────────────────────────────────────────────────╯');
-        console.log('');
-
-        // Display status after successful login
+        // Display status after successful login (includes logo)
         await displayStatus();
       } else {
         console.error('Error: Unexpected response from server');

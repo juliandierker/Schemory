@@ -10,7 +10,7 @@ describe('ItemKindBadge', () => {
     
     const badge = screen.getByText('type');
     expect(badge).toBeInTheDocument();
-    expect(badge).toHaveClass('bg-primary', 'bg-opacity-10', 'text-primary');
+    expect(badge).toHaveClass('bg-primary', 'bg-opacity-10', 'text-white');
   });
 
   it('renders schema badge with correct styling', () => {
@@ -18,7 +18,7 @@ describe('ItemKindBadge', () => {
     
     const badge = screen.getByText('schema');
     expect(badge).toBeInTheDocument();
-    expect(badge).toHaveClass('bg-valid', 'bg-opacity-10', 'text-valid');
+    expect(badge).toHaveClass('bg-valid', 'bg-opacity-10', 'text-white');
   });
 
   it('has correct accessibility label', () => {

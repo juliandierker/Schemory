@@ -16,6 +16,9 @@ import {
   mapDbItemToItem,
   getAllItemsForUserWithTeams,
   getItemsByTeamWithTeamInfo,
+  getItemRevisionsByName,
+  mapDbItemRevisionToItemRevision,
+  ItemRevision as ServerItemRevision,
 } from '../repos/items.js';
 import { getUserTeams, DbTeam } from '../repos/teams.js';
 import { DbUser } from '../repos/auth.js';
@@ -28,6 +31,10 @@ export interface ItemsResponse {
 
 export interface ItemResponse {
   item: Item;
+}
+
+export interface ItemRevisionsResponse {
+  revisions: ServerItemRevision[];
 }
 
 export interface ErrorResponse {
@@ -292,6 +299,51 @@ export const itemRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       console.error('Delete item error:', error);
+      return reply.status(500).send(errorResponse('INTERNAL_ERROR', 'Internal server error'));
+    }
+  });
+
+  // GET /items/:name/revisions
+  // Returns all revisions for a specific item
+  fastify.get<{
+    Params: { name: string };
+    Querystring: { teamId?: string };
+    Reply: ItemRevisionsResponse | ErrorResponse;
+  }>('/items/:name/revisions', {
+    preHandler: requireAuth,
+  }, async (request, reply) => {
+    const user = request.user!;
+    const { name } = request.params;
+    const { teamId } = request.query;
+
+    try {
+      if (!teamId) {
+        return reply.status(400).send(errorResponse('TEAM_ID_REQUIRED', 'teamId query parameter is required'));
+      }
+
+      const teamIdNum = parseInt(teamId.toString(), 10);
+      if (isNaN(teamIdNum)) {
+        return reply.status(400).send(errorResponse('INVALID_TEAM_ID', 'teamId must be a valid number'));
+      }
+
+      const revisions = await getItemRevisionsByName(teamIdNum, name, user.id);
+      const mappedRevisions = revisions.map(mapDbItemRevisionToItemRevision);
+
+      return reply.status(200).send({
+        revisions: mappedRevisions,
+      });
+    } catch (error: unknown) {
+      const errorMessage = (error as Error).message;
+
+      if (errorMessage.includes('not a member') || errorMessage.includes('User is not a member')) {
+        return reply.status(403).send(errorResponse('UNAUTHORIZED', 'User is not a member of this team'));
+      }
+
+      if (errorMessage.includes('not found') || errorMessage.includes('does not belong')) {
+        return reply.status(404).send(errorResponse('ITEM_NOT_FOUND', 'Item not found or does not belong to this team'));
+      }
+
+      console.error('Get item revisions error:', error);
       return reply.status(500).send(errorResponse('INTERNAL_ERROR', 'Internal server error'));
     }
   });

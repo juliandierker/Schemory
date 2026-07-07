@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useCreateActions } from '../context/CreateActionsContext';
 import logoLightUrl from '../assets/logo-full.svg';
 import logoDarkUrl from '../assets/logo-full-dark.svg';
 import {
@@ -12,14 +13,10 @@ import {
   LogoutIcon
 } from './icons';
 
-interface HeaderbarProps {
-  onCreateTeam?: () => void;
-  onCreateFile?: () => void;
-}
-
-export default function Headerbar({ onCreateTeam, onCreateFile }: HeaderbarProps) {
+export default function Headerbar() {
   const { theme, toggleTheme } = useTheme();
   const { logout, sessionToken, user } = useAuth();
+  const { onCreateTeam, onCreateFile } = useCreateActions();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

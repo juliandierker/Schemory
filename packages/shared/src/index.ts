@@ -84,6 +84,25 @@ export interface ItemResponse {
 }
 
 // ============================================================================
+// Item Revision types
+// ============================================================================
+
+export interface ItemRevision {
+  id: string;
+  itemId: string;
+  teamId: string;
+  name: string;
+  kind: ItemKind;
+  content: string;
+  version: number;
+  createdAt: string;
+}
+
+export interface ItemRevisionsResponse {
+  revisions: ItemRevision[];
+}
+
+// ============================================================================
 // Auth types
 // ============================================================================
 

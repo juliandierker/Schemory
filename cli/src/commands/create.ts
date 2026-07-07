@@ -3,7 +3,7 @@
 
 import { Command } from 'commander';
 import { getHttpClient, setHttpClientConfig } from '../http.js';
-import { readConfig, addTeam, setDefaultTeam } from '../config.js';
+import { readConfig, addTeam, autoSetDefaultTeamIfSingleTeam } from '../config.js';
 
 export function createCreateCommand(): Command {
   return new Command('create')
@@ -62,11 +62,8 @@ export function createCreateCommand(): Command {
             createdAt: data.team.createdAt,
           });
 
-          // Set as default team if it's the first team
-          const currentConfig = readConfig();
-          if (currentConfig.teams.length === 1) {
-            setDefaultTeam(data.team.name);
-          }
+          // Auto-select single team if applicable
+          autoSetDefaultTeamIfSingleTeam();
 
           console.log(`Created team ${data.team.name}`);
           console.log(`Team ID: ${data.team.id}`);

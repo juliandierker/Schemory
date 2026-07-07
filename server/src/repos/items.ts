@@ -4,6 +4,20 @@ import { query } from '../db.js';
 import { DbUser } from './auth.js';
 
 /**
+ * Database item revision record
+ */
+export interface DbItemRevision {
+  id: number;
+  item_id: number;
+  team_id: number;
+  name: string;
+  kind: string;
+  content: string;
+  version: number;
+  created_at: string;
+}
+
+/**
  * Database item record
  */
 export interface DbItem {
@@ -386,4 +400,97 @@ export async function deleteItem(itemId: number, teamId: number, userId: number)
   );
 
   return true;
+}
+
+/**
+ * Get revisions for a specific item
+ */
+export async function getItemRevisions(
+  itemId: number,
+  teamId: number,
+  userId: number
+): Promise<DbItemRevision[]> {
+  // First, check if the user is a member of the team
+  const isMember = await isUserMemberOfTeam(userId, teamId);
+  if (!isMember) {
+    throw new Error('User is not a member of this team');
+  }
+
+  // Check if the item exists and belongs to the specified team
+  const existingItem = await query<{ id: number; team_id: number }>(
+    `SELECT id, team_id FROM items WHERE id = $1 AND team_id = $2`,
+    [itemId, teamId]
+  );
+
+  if (existingItem.rows.length === 0) {
+    throw new Error('Item not found or does not belong to this team');
+  }
+
+  const result = await query<DbItemRevision>(
+    `SELECT id, item_id, team_id, name, kind, content, version, created_at
+     FROM item_revisions
+     WHERE item_id = $1 AND team_id = $2
+     ORDER BY version DESC`,
+    [itemId, teamId]
+  );
+
+  return result.rows;
+}
+
+/**
+ * Get revisions for a specific item by name and team
+ */
+export async function getItemRevisionsByName(
+  teamId: number,
+  itemName: string,
+  userId: number
+): Promise<DbItemRevision[]> {
+  // First, check if the user is a member of the team
+  const isMember = await isUserMemberOfTeam(userId, teamId);
+  if (!isMember) {
+    throw new Error('User is not a member of this team');
+  }
+
+  // Get the item ID
+  const item = await getItemByNameInTeam(teamId, itemName);
+  if (!item) {
+    throw new Error('Item not found or does not belong to this team');
+  }
+
+  const result = await query<DbItemRevision>(
+    `SELECT id, item_id, team_id, name, kind, content, version, created_at
+     FROM item_revisions
+     WHERE item_id = $1 AND team_id = $2
+     ORDER BY version DESC`,
+    [item.id, teamId]
+  );
+
+  return result.rows;
+}
+
+/**
+ * Map DB item revision to API response format
+ */
+export interface ItemRevision {
+  id: string;
+  itemId: string;
+  teamId: string;
+  name: string;
+  kind: string;
+  content: string;
+  version: number;
+  createdAt: string;
+}
+
+export function mapDbItemRevisionToItemRevision(dbRevision: DbItemRevision): ItemRevision {
+  return {
+    id: dbRevision.id.toString(),
+    itemId: dbRevision.item_id.toString(),
+    teamId: dbRevision.team_id.toString(),
+    name: dbRevision.name,
+    kind: dbRevision.kind,
+    content: dbRevision.content,
+    version: dbRevision.version,
+    createdAt: dbRevision.created_at,
+  };
 }

@@ -1,7 +1,7 @@
 // Integration tests for CLI commands
 // Tests CLI command functions directly with mock server responses
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -1053,6 +1053,37 @@ describe('CLI commands', () => {
         expect(formattedTeams[0]).toBe('  - team-a (default)');
         expect(formattedTeams[1]).toBe('  - team-b');
       });
+    });
+  });
+
+  describe('displayLogo', () => {
+    it('should display the { = } logo correctly', async () => {
+      const { displayLogo } = await import('../src/utils/display.js');
+      
+      // Mock console.log to capture output
+      const consoleLogs: string[] = [];
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation((msg: string) => {
+        consoleLogs.push(msg);
+      });
+      
+      displayLogo();
+      
+      // Restore console.log
+      consoleSpy.mockRestore();
+      
+      // Verify that { = } is in the output
+      const logoOutput = consoleLogs.join('\n');
+      
+      expect(logoOutput).toContain('{ = }');
+      expect(logoOutput).toContain('Welcome to Schemory!');
+      expect(logoOutput).toContain('Share TypeScript types & JSON schemas');
+      
+      // Verify no box-drawing characters (which don't render everywhere)
+      expect(logoOutput).not.toContain('╭');
+      expect(logoOutput).not.toContain('╮');
+      expect(logoOutput).not.toContain('│');
+      expect(logoOutput).not.toContain('╰');
+      expect(logoOutput).not.toContain('╯');
     });
   });
 });

@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import JoinTeamForm from '../components/JoinTeamForm';
-import CreateTeamForm from '../components/CreateTeamForm';
-import { ArrowRightIcon } from '../components/icons';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import CreateTeamForm from "../components/CreateTeamForm";
+import JoinTeamForm from "../components/JoinTeamForm";
+import Layout from "../components/Layout";
+import { ArrowRightIcon } from "../components/icons";
+import { useAuth } from "../context/AuthContext";
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 interface UserTeam {
   id: number;
@@ -25,6 +26,7 @@ interface ErrorResponse {
   };
 }
 
+// Main Teams component
 export default function Teams() {
   const { sessionToken } = useAuth();
   const [teams, setTeams] = useState<UserTeam[]>([]);
@@ -38,19 +40,19 @@ export default function Teams() {
     try {
       const response = await fetch(`${API_BASE}/teams`, {
         headers: {
-          Authorization: `Bearer ${sessionToken || ''}`,
+          Authorization: `Bearer ${sessionToken || ""}`,
         },
       });
 
       if (!response.ok) {
         const errorData: ErrorResponse = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || 'Failed to fetch teams');
+        throw new Error(errorData.error?.message || "Failed to fetch teams");
       }
 
       const data: TeamsResponse = await response.json();
       setTeams(data.teams);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load teams');
+      setError(err instanceof Error ? err.message : "Failed to load teams");
     } finally {
       setIsLoading(false);
     }
@@ -60,121 +62,90 @@ export default function Teams() {
     fetchTeams();
   }, []);
 
-  const handleJoinSuccess = () => {
-    // Refetch the team list after successful join
-    fetchTeams();
-  };
-
   return (
     <div className="p-8">
-      <main className="max-w-4xl mx-auto">
-        {error && (
-          <div className="bg-error bg-opacity-10 border border-error rounded-lg p-4 mb-6">
-            <p className="text-error">{error}</p>
-          </div>
-        )}
-
-        {/* Team List */}
-        <section className="bg-surface border border-border rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-display font-semibold text-text mb-4">
-            Your Teams
-          </h2>
-
-          {isLoading ? (
-            <p className="text-text text-opacity-70">Loading teams...</p>
-          ) : teams.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-display font-semibold text-text mb-4">
-                No Teams Yet
-              </h3>
-              <p className="text-text text-opacity-70 mb-6 max-w-md mx-auto">
-                You are not a member of any team yet. Use the form below to create a team or join an existing one.
-              </p>
-              <div className="space-y-4">
-                <Link
-                  to="/cli"
-                  className="inline-flex items-center space-x-2 px-6 py-3 bg-primary text-white font-body rounded-lg hover:bg-opacity-90 transition-colors"
-                >
-                  <span>Go to CLI Setup</span>
-                  <ArrowRightIcon className="w-4 h-4" />
-                </Link>
-                <p className="text-text text-opacity-50 text-sm">
-                  or use the command:
-                </p>
-                <code className="font-mono bg-border px-3 py-2 rounded text-sm block">
-                  npx schemory create &lt;team-name&gt;
-                </code>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-text text-opacity-70 uppercase tracking-wider">
-                      Team Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-text text-opacity-70 uppercase tracking-wider">
-                      Join Code
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-text text-opacity-70 uppercase tracking-wider">
-                      Role
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {teams.map((team) => (
-                    <tr
-                      key={team.id}
-                      className="hover:bg-border hover:bg-opacity-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <span className="font-body text-text">{team.name}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="font-mono text-text text-sm">
-                          {team.joinCode || 'N/A'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="font-body text-text text-opacity-70">
-                          {team.role}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <main className="max-w-4xl mx-auto">
+          {error && (
+            <div className="bg-error bg-opacity-10 border border-error rounded-lg p-4 mb-6">
+              <p className="text-white">{error}</p>
             </div>
           )}
-        </section>
 
-        {/* Create Team Form */}
-        <section className="bg-surface border border-border rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-display font-semibold text-text mb-4">
-            Create a Team
-          </h2>
-          <p className="text-text text-opacity-70 mb-4">
-            Create a new team to start sharing TypeScript types and JSON schemas.
-          </p>
-          <div className="max-w-md">
-            <CreateTeamForm onSuccess={handleJoinSuccess} />
-          </div>
-        </section>
+          {/* Team List */}
+          <section className="bg-surface border border-border rounded-lg p-6 mb-8">
+            <h2 className="text-lg font-display font-semibold text-text mb-4">Your Teams</h2>
 
-        {/* Join Team Form */}
-        <section className="bg-surface border border-border rounded-lg p-6">
-          <h2 className="text-lg font-display font-semibold text-text mb-4">
-            Join a Team
-          </h2>
-          <p className="text-text text-opacity-70 mb-4">
-            Enter a join code to join a team. Ask a team member to share their join code with you.
-          </p>
-          <div className="max-w-md">
-            <JoinTeamForm onSuccess={handleJoinSuccess} />
-          </div>
-        </section>
-      </main>
-    </div>
+            {isLoading ? (
+              <p className="text-text text-opacity-70">Loading teams...</p>
+            ) : teams.length === 0 ? (
+              <div className="text-center py-12">
+                <h3 className="text-xl font-display font-semibold text-text mb-4">No Teams Yet</h3>
+                <p className="text-text text-opacity-70 mb-6 max-w-md mx-auto">
+                  You are not a member of any team yet. Use the form below to create a team or join an existing one.
+                </p>
+                <div className="space-y-4">
+                  <Link
+                    to="/cli"
+                    className="inline-flex items-center space-x-2 px-6 py-3 bg-primary text-white font-body rounded-lg hover:bg-opacity-90 transition-colors"
+                  >
+                    <span>Go to CLI Setup</span>
+                    <ArrowRightIcon className="w-4 h-4" />
+                  </Link>
+                  <p className="text-text text-opacity-50 text-sm">or use the command:</p>
+                  <code className="font-mono bg-border px-3 py-2 rounded text-sm block">
+                    npx schemory create &lt;team-name&gt;
+                  </code>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-text text-opacity-70 uppercase tracking-wider">
+                        Team Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-text text-opacity-70 uppercase tracking-wider">
+                        Join Code
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-text text-opacity-70 uppercase tracking-wider">
+                        Role
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {teams.map((team) => (
+                      <tr key={team.id} className="hover:bg-border hover:bg-opacity-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <span className="font-body text-text">{team.name}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-mono text-text text-sm">{team.joinCode || "N/A"}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-body text-text text-opacity-70">{team.role}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          {/* Join Team Form */}
+          <section className="bg-surface border border-border rounded-lg p-6">
+            <h2 className="text-lg font-display font-semibold text-text mb-4">Join a Team</h2>
+            <p className="text-text text-opacity-70 mb-4">
+              Enter a join code to join a team. Ask a team member to share their join code with you.
+            </p>
+            <div className="max-w-md">
+              <JoinTeamForm onSuccess={fetchTeams} />
+            </div>
+          </section>
+        </main>
+
+      </div>
   );
 }
+

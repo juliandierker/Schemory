@@ -72,11 +72,11 @@ export const LogoutIcon = ({ className = 'w-4 h-4', size }: IconProps) => (
 );
 
 // Layout icons
-export const MenuIcon = ({ className = 'w-6 h-6', size }: IconProps) => (
+export const MenuIcon = ({ className = 'w-5 h-5', size }: IconProps) => (
   <Menu className={className} size={size} />
 );
 
-export const CloseIcon = ({ className = 'w-6 h-6', size }: IconProps) => (
+export const CloseIcon = ({ className = 'w-5 h-5', size }: IconProps) => (
   <X className={className} size={size} />
 );
 

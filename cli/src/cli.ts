@@ -16,6 +16,7 @@ import { createStatusCommand } from './commands/status.js';
 import { createHelpCommand } from './commands/help.js';
 import { createSyncCommand } from './commands/sync.js';
 import { createLogoutCommand } from './commands/logout.js';
+import { createCompletionCommand } from './commands/completion.js';
 
 /**
  * Create the main CLI program
@@ -44,7 +45,8 @@ function createCLI(): Command {
     .addCommand(createStatusCommand())
     .addCommand(createHelpCommand())
     .addCommand(createSyncCommand())
-    .addCommand(createLogoutCommand());
+    .addCommand(createLogoutCommand())
+    .addCommand(createCompletionCommand());
 
   // Global error handling
   program.configureOutput({

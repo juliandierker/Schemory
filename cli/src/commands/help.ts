@@ -37,6 +37,7 @@ export function createHelpCommand(): Command {
       // General commands
       console.log('GENERAL');
       console.log('  npx schemory help                  Show this help information');
+      console.log('  npx schemory completion [bash|zsh] Generate shell completion script');
       console.log('  npx schemory --version             Show CLI version\n');
 
       // Usage examples

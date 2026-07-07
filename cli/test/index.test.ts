@@ -25,8 +25,9 @@ describe('CLI', () => {
     expect(commands).toContain('help');
     expect(commands).toContain('sync');
     expect(commands).toContain('logout');
+    expect(commands).toContain('completion');
     
-    expect(commands).toHaveLength(14);
+    expect(commands).toHaveLength(15);
   });
 
   it('should have correct command descriptions', () => {
@@ -70,5 +71,8 @@ describe('CLI', () => {
 
     const logoutCmd = commands.find(c => c.name() === 'logout');
     expect(logoutCmd?.description()).toContain('Log out');
+
+    const completionCmd = commands.find(c => c.name() === 'completion');
+    expect(completionCmd?.description()).toContain('shell completion script');
   });
 });

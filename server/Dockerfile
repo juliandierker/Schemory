@@ -55,14 +55,13 @@ RUN chown nodejs:nodejs /app
 # Switch to non-root user
 USER nodejs
 
-# Copy production dependencies from builder
-# We copy only the production dependencies we need
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules/pg /app/node_modules/pg
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules/fastify /app/node_modules/fastify
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules/bcrypt /app/node_modules/bcrypt
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules/resend /app/node_modules/resend
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules/node-pg-migrate /app/node_modules/node-pg-migrate
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules/@fastify /app/node_modules/@fastify
+# Copy production dependencies from builder (from server's node_modules)
+COPY --from=builder --chown=nodejs:nodejs /app/server/node_modules/pg /app/node_modules/pg
+COPY --from=builder --chown=nodejs:nodejs /app/server/node_modules/fastify /app/node_modules/fastify
+COPY --from=builder --chown=nodejs:nodejs /app/server/node_modules/bcrypt /app/node_modules/bcrypt
+COPY --from=builder --chown=nodejs:nodejs /app/server/node_modules/resend /app/node_modules/resend
+COPY --from=builder --chown=nodejs:nodejs /app/server/node_modules/node-pg-migrate /app/node_modules/node-pg-migrate
+COPY --from=builder --chown=nodejs:nodejs /app/server/node_modules/@fastify /app/node_modules/@fastify
 
 # Fix: Copy built @schemory/shared package to node_modules
 RUN mkdir -p /app/node_modules/@schemory

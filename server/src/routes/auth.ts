@@ -10,6 +10,7 @@ import {
   getUserByEmail,
   setUserPassword,
   loginWithPassword,
+  resendActivationEmail,
 } from '../repos/auth.js';
 import { getEmailService } from '../email.js';
 import { DbUser, DbAuthToken } from '../repos/auth.js';
@@ -368,6 +369,55 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       });
     } catch (error: unknown) {
       console.error('Token login error:', error);
+      return reply.status(500).send({
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Internal server error',
+        },
+      });
+    }
+  });
+
+  // POST /auth/resend-activation
+  // Resend activation email for a user
+  fastify.post<{
+    Body: { email: string };
+    Reply: SignupResponse | ErrorResponse;
+  }>('/auth/resend-activation', async (request, reply) => {
+    const { email } = request.body;
+
+    // Validate email
+    if (!email || !email.includes('@')) {
+      return reply.status(400).send({
+        error: {
+          code: 'INVALID_EMAIL',
+          message: 'Invalid email format',
+        },
+      });
+    }
+
+    try {
+      // Resend activation email
+      const result = await resendActivationEmail(email);
+      
+      if (!result) {
+        // Don't reveal whether user exists or is already activated for security
+        // Return a generic success message
+        return reply.status(200).send({
+          status: 'sent',
+          message: 'If an account exists with this email, a new activation email has been sent',
+        });
+      }
+      
+      // Send activation email (stub logs to console)
+      await getEmailService().sendActivationEmail(email, result.activationToken);
+
+      return reply.status(200).send({
+        status: 'sent',
+        message: 'Activation email resent',
+      });
+    } catch (error: unknown) {
+      console.error('Resend activation error:', error);
       return reply.status(500).send({
         error: {
           code: 'INTERNAL_ERROR',

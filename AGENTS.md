@@ -16,6 +16,7 @@ Stack preference: European or open source only.
 | Step | Command | Requires | Result |
 |------|---------|----------|--------|
 | 1 | `npx schemory signup <email>` | — | sends confirmation email with activation token |
+| 1b | `npx schemory resignup <email>` | — | resends activation email for existing account |
 | 2 | `npx schemory activate <act_...>` | step 1 | activates account, prompts to set password, and authenticates CLI |
 | 3 | `npx schemory login <email>` | registered account | prompts for password, authenticates CLI, displays welcome message with icon, and shows status |
 | 3b | `npx schemory logout` | logged in | clears authentication token, logs out of current session |

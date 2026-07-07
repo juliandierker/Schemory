@@ -305,3 +305,56 @@ export async function loginWithPassword(
   
   return { user, accessToken };
 }
+
+/**
+ * Resend activation email for a user - generates new activation token and sends email
+ */
+export async function resendActivationEmail(
+  email: string
+): Promise<{ activationToken: ActivationTokenRaw } | null> {
+  // Get user by email
+  const user = await getUserByIdForResend(email);
+  
+  if (!user) {
+    return null; // User not found
+  }
+  
+  if (user.is_active) {
+    return null; // User already activated
+  }
+  
+  // Invalidate any existing activation tokens for this user
+  await query(
+    `DELETE FROM activation_tokens WHERE user_id = $1`,
+    [user.id]
+  );
+  
+  // Generate new activation token
+  const activationToken = 'act_' + generateToken();
+  const tokenHash = await hashToken(activationToken);
+  
+  // Calculate expiry (24 hours from now)
+  const expiresAt = new Date(Date.now() + ACTIVATION_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
+  
+  // Store new activation token
+  await query(
+    `INSERT INTO activation_tokens (user_id, token_hash, expires_at)
+     VALUES ($1, $2, $3)`,
+    [user.id, tokenHash, expiresAt.toISOString()]
+  );
+  
+  return { activationToken };
+}
+
+/**
+ * Get user by email for resend flow (doesn't include password_hash)
+ */
+async function getUserByIdForResend(email: string): Promise<DbUser | null> {
+  const result = await query<DbUser>(
+    `SELECT id, email, is_active, created_at, updated_at
+     FROM users WHERE email = $1`,
+    [email]
+  );
+  
+  return result.rows[0] || null;
+}

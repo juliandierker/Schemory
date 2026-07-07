@@ -12,6 +12,7 @@ export function createHelpCommand(): Command {
       // Authentication commands
       console.log('AUTHENTICATION');
       console.log('  npx schemory signup <email>           Register a new Schemory account');
+      console.log('  npx schemory resignup <email>         Resend activation email for existing account');
       console.log('  npx schemory activate <token>         Activate your account using activation token');
       console.log('  npx schemory login <email>           Authenticate with email and password');
       console.log('  npx schemory logout                  Log out of the current session\n');
@@ -44,6 +45,7 @@ export function createHelpCommand(): Command {
       console.log('USAGE EXAMPLES');
       console.log('  # Get started');
       console.log('  npx schemory signup user@example.com');
+      console.log('  npx schemory resignup user@example.com');
       console.log('  npx schemory activate act_token_from_email');
       console.log('  npx schemory login user@example.com');
       console.log('  npx schemory logout');
@@ -66,7 +68,7 @@ export function createHelpCommand(): Command {
 
       // Quick reference
       console.log('QUICK REFERENCE');
-      console.log('  Setup:    signup -> activate -> login -> logout');
+      console.log('  Setup:    signup -> resignup -> activate -> login -> logout');
       console.log('  Teams:    create -> invite -> join -> use -> sync');
       console.log('  Files:    push -> pull');
       console.log('  Status:   status, help\n');

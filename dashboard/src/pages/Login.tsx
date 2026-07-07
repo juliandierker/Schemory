@@ -145,6 +145,10 @@ export default function Login() {
         <p className="mt-4 text-sm text-text text-opacity-70 font-body">
           Don't have an account? <a href="/signup" className="text-primary hover:underline">Sign up</a>
         </p>
+        
+        <p className="mt-2 text-sm text-text text-opacity-70 font-body">
+          <a href="/forgot-password" className="text-primary hover:underline">Forgot password? Resend activation email</a>
+        </p>
       </div>
     </div>
   );

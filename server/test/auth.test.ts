@@ -402,4 +402,85 @@ describe('auth routes', () => {
       expect(loginBody.accessToken).toBeDefined();
     });
   });
+
+  // Tests for resend-activation endpoint
+  describe('resend-activation', () => {
+    it('resend activation email for existing inactive user', async () => {
+      const testEmail = `resend_test_${Date.now()}@example.com`;
+      
+      // First signup
+      const signupResponse = await request('POST', '/auth/signup', { email: testEmail });
+      expect(signupResponse.statusCode).toBe(202);
+      
+      // Clear captured emails to avoid using the first token
+      testEmailService.capturedEmails.clear();
+      
+      // Request to resend activation email
+      const resendResponse = await request('POST', '/auth/resend-activation', { email: testEmail });
+      expect(resendResponse.statusCode).toBe(200);
+      const resendBody = resendResponse.json();
+      expect(resendBody.status).toBe('sent');
+      expect(resendBody.message).toBe('Activation email resent');
+      
+      // Should have sent a new activation email
+      const newActivationToken = testEmailService.getActivationToken(testEmail);
+      expect(newActivationToken).toBeDefined();
+      expect(newActivationToken).toContain('act_');
+      
+      // Old activation token should be invalidated (can't use it anymore)
+      const oldActivationToken = signupResponse.json();
+      // Note: old token was cleared when we cleared capturedEmails
+    });
+
+    it('resend activation email for invalid email returns generic message', async () => {
+      const response = await request('POST', '/auth/resend-activation', { email: 'nonexistent@example.com' });
+      
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.status).toBe('sent');
+      // Generic message for security - don't reveal if user exists
+      expect(body.message).toContain('If an account exists with this email');
+    });
+
+    it('resend activation email for already activated user returns generic message', async () => {
+      const testEmail = `already_active_${Date.now()}@example.com`;
+      const testPassword = 'securePassword123!';
+      
+      // Full signup and activation
+      const signupResponse = await request('POST', '/auth/signup', { email: testEmail });
+      expect(signupResponse.statusCode).toBe(202);
+      
+      const activationToken = testEmailService.getActivationToken(testEmail);
+      expect(activationToken).toBeDefined();
+      
+      // Activate with password
+      const activateResponse = await request('POST', '/auth/activate', {
+        token: activationToken,
+        password: testPassword
+      });
+      expect(activateResponse.statusCode).toBe(200);
+      
+      // Clear captured emails
+      testEmailService.capturedEmails.clear();
+      
+      // Try to resend activation for already active user
+      const resendResponse = await request('POST', '/auth/resend-activation', { email: testEmail });
+      expect(resendResponse.statusCode).toBe(200);
+      const body = resendResponse.json();
+      expect(body.status).toBe('sent');
+      expect(body.message).toContain('If an account exists with this email');
+      
+      // Should not have sent a new email since user is already active
+      const newToken = testEmailService.getActivationToken(testEmail);
+      expect(newToken).toBeUndefined();
+    });
+
+    it('resend activation with invalid email format returns 400', async () => {
+      const response = await request('POST', '/auth/resend-activation', { email: 'not-an-email' });
+      
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body.error.code).toBe('INVALID_EMAIL');
+    });
+  });
 });

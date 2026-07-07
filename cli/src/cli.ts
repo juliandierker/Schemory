@@ -17,6 +17,7 @@ import { createHelpCommand } from './commands/help.js';
 import { createSyncCommand } from './commands/sync.js';
 import { createLogoutCommand } from './commands/logout.js';
 import { createCompletionCommand } from './commands/completion.js';
+import { createResignupCommand } from './commands/resignup.js';
 
 /**
  * Create the main CLI program
@@ -35,6 +36,7 @@ function createCLI(): Command {
     .addCommand(createSignupCommand())
     .addCommand(createActivateCommand())
     .addCommand(createLoginCommand())
+    .addCommand(createResignupCommand())
     .addCommand(createCreateCommand())
     .addCommand(createJoinCommand())
     .addCommand(createInviteCommand())

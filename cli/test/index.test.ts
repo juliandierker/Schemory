@@ -20,8 +20,13 @@ describe('CLI', () => {
     expect(commands).toContain('pull');
     expect(commands).toContain('pullAll');
     expect(commands).toContain('push');
+    expect(commands).toContain('use');
+    expect(commands).toContain('status');
+    expect(commands).toContain('help');
+    expect(commands).toContain('sync');
+    expect(commands).toContain('logout');
     
-    expect(commands).toHaveLength(9);
+    expect(commands).toHaveLength(14);
   });
 
   it('should have correct command descriptions', () => {
@@ -50,5 +55,20 @@ describe('CLI', () => {
     
     const pushCmd = commands.find(c => c.name() === 'push');
     expect(pushCmd?.description()).toContain('Push');
+
+    const useCmd = commands.find(c => c.name() === 'use');
+    expect(useCmd?.description()).toContain('active team');
+
+    const statusCmd = commands.find(c => c.name() === 'status');
+    expect(statusCmd?.description()).toContain('login status');
+
+    const helpCmd = commands.find(c => c.name() === 'help');
+    expect(helpCmd?.description()).toContain('CLI commands');
+
+    const syncCmd = commands.find(c => c.name() === 'sync');
+    expect(syncCmd?.description()).toContain('Sync local CLI configuration');
+
+    const logoutCmd = commands.find(c => c.name() === 'logout');
+    expect(logoutCmd?.description()).toContain('Log out');
   });
 });

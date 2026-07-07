@@ -3,6 +3,7 @@ import React from 'react';
 import { render as tlRender, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
+import '@testing-library/jest-dom';
 
 // Mock fetch globally for all tests
 vi.stubGlobal('fetch', vi.fn());

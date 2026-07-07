@@ -1,19 +1,15 @@
 import { NavLink } from 'react-router-dom';
 import {
-  DashboardIcon,
   TeamsIcon,
   TerminalIcon,
-  BookIcon,
   FilesIcon
 } from './icons';
 
 // Navigation items
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/teams', label: 'Teams', icon: TeamsIcon },
+  { path: '/', label: 'Teams', icon: TeamsIcon },
   { path: '/items', label: 'Files', icon: FilesIcon },
   { path: '/cli', label: 'CLI', icon: TerminalIcon },
-  { path: '/docs', label: 'Docs', icon: BookIcon },
 ];
 
 interface SidebarProps {

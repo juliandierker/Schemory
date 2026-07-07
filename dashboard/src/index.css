@@ -27,6 +27,10 @@
   --color-header-bg: #FFFFFF;
   --color-header-border: #E2E8F0;
   
+  /* Code block specific */
+  --color-code-bg: #F1F5F9;
+  --color-code-text: #475569;
+  
   /* Fonts */
   --font-display: 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
@@ -37,7 +41,7 @@
 [data-theme="dark"] {
   --color-primary: #6366F1;    /* Lighter indigo for dark mode visibility */
   --color-valid: #10B981;      /* Emerald green - success/validated schemas */
-  --color-error: #EF4444;      /* Red - error/invalid schemas */
+  --color-error: #FCA5A5;      /* Lighter red for better contrast on dark backgrounds */
   --color-surface: #0F172A;    /* Dark background surface - slate-900 */
   --color-surface-elevated: #1E293B; /* Elevated surfaces - slate-800 */
   --color-text: #F8FAFC;       /* Primary text - slate-50 */
@@ -55,6 +59,10 @@
   /* Header specific */
   --color-header-bg: #1E293B;
   --color-header-border: #334155;
+  
+  /* Code block specific */
+  --color-code-bg: #334155;
+  --color-code-text: #E2E8F0;
   
   /* Type plate adjustments for dark mode */
   --color-type-plate-bg: #0F172A;

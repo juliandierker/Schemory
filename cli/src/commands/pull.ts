@@ -11,10 +11,11 @@ import { readConfig } from '../config.js';
 
 export function createPullCommand(): Command {
   return new Command('pull')
-    .description('Pull schemas and types. Usage: schemory pull [name] [outputPath]')
+    .description('Pull schemas and types. Usage: schemory pull [name] [outputPath] [--team <teamId>]')
     .argument('[name]', 'Name of the schema or type to pull (optional - pulls all if omitted)')
     .argument('[outputPath]', 'Optional output file path for single item (e.g., ./mytype.ts)')
-    .action(async (name?: string, outputPath?: string) => {
+    .option('--team <teamId>', 'Filter items by team ID')
+    .action(async (name?: string, outputPath?: string, options?: { team?: string }) => {
       // Get config to determine API URL and check for auth token
       const config = readConfig();
       const apiUrl = config.apiUrl;
@@ -38,8 +39,9 @@ export function createPullCommand(): Command {
 
       // If no name provided, pull all items (like pullAll)
       if (!name || name.trim().length === 0) {
-        // GET /items - pull all
-        const response = await http.get('/items');
+        // GET /items - pull all, optionally filtered by team
+        const queryParams = options?.team ? `?teamId=${encodeURIComponent(options.team)}` : '';
+        const response = await http.get(`/items${queryParams}`);
 
         if (response.error) {
           if (response.error.code === 'UNAUTHORIZED') {

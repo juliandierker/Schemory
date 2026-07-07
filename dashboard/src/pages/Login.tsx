@@ -9,6 +9,9 @@ interface LoginResponse {
   sessionToken?: string;
   token?: string;
   accessToken?: string;
+  user?: {
+    email: string;
+  };
 }
 
 interface ErrorResponse {
@@ -60,14 +63,15 @@ export default function Login() {
       }
 
       const data: LoginResponse = await response.json();
-      // API returns { accessToken } for email/password login
+      // API returns { accessToken, user } for email/password login
       const sessionToken = data.accessToken || data.sessionToken || data.token;
+      const userEmail = data.user?.email;
       
       if (!sessionToken) {
         throw new Error('No session token received');
       }
 
-      login(sessionToken);
+      login(sessionToken, userEmail);
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -88,7 +92,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-surface p-4">
       <div className="w-full max-w-md">
         <h1 className="text-2xl font-display font-bold text-text mb-6">
-          Schemory Dashboard
+          Schemory
         </h1>
         
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -6,10 +6,10 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Activate from './pages/Activate';
-import Dashboard from './pages/Dashboard';
 import Items from './pages/Items';
 import ItemDetail from './pages/ItemDetail';
 import Teams from './pages/Teams';
+import CLI from './pages/CLI';
 
 function App() {
   return (
@@ -27,7 +27,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <Layout>
-                  <Dashboard />
+                  <Teams />
                 </Layout>
               </ProtectedRoute>
             }
@@ -62,23 +62,13 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* CLI and Docs pages (placeholder routes) */}
+          {/* CLI page */}
           <Route
             path="/cli"
             element={
               <ProtectedRoute>
                 <Layout>
-                  <div className="p-8 text-text">CLI Documentation (Coming Soon)</div>
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/docs"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <div className="p-8 text-text">Documentation (Coming Soon)</div>
+                  <CLI />
                 </Layout>
               </ProtectedRoute>
             }

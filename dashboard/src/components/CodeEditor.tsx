@@ -1,14 +1,16 @@
-import CodeMirror from '@uiw/react-codemirror';
+import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { javascript } from '@codemirror/lang-javascript';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import { useTheme } from '../context/ThemeContext';
+import { useEffect } from 'react';
 
 interface CodeEditorProps {
   content: string;
   language?: 'json' | 'typescript' | 'javascript' | 'text';
   readOnly?: boolean;
   className?: string;
+  onChange?: (content: string) => void;
 }
 
 // Map file extensions/ItemKind to CodeMirror language support
@@ -81,7 +83,8 @@ export default function CodeEditor({
   content,
   language: providedLanguage,
   readOnly = true,
-  className = ''
+  className = '',
+  onChange
 }: CodeEditorProps) {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
@@ -95,6 +98,13 @@ export default function CodeEditor({
   // Get theme based on current theme mode
   const editorTheme = isDarkMode ? githubDark : githubLight;
 
+  // Handle content changes
+  const handleChange = (value: string, viewUpdate: any) => {
+    if (onChange && value !== content) {
+      onChange(value);
+    }
+  };
+
   return (
     <div className={`code-editor-container ${className}`}>
       <CodeMirror
@@ -103,6 +113,7 @@ export default function CodeEditor({
         theme={editorTheme}
         extensions={[languageExtension].filter(Boolean) as any}
         readOnly={readOnly}
+        onChange={!readOnly ? handleChange : undefined}
         basicSetup={{
           lineNumbers: true,
           foldGutter: true,

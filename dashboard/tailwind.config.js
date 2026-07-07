@@ -17,6 +17,8 @@ export default {
         'text-muted': 'var(--color-text-muted)',
         border: 'var(--color-border)',
         hover: 'var(--color-hover)',
+        'code-bg': 'var(--color-code-bg)',
+        'code-text': 'var(--color-code-text)',
         'sidebar-bg': 'var(--color-sidebar-bg)',
         'sidebar-text': 'var(--color-sidebar-text)',
         'sidebar-text-active': 'var(--color-sidebar-text-active)',

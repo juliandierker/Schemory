@@ -12,12 +12,19 @@
 - **favicon-dark.svg** - Purple symbol on dark background (dark mode)
 
 ### Full Logo
-- **logo-full.svg** - Complete logo with "schemory" text
+- **logo-full.svg** — Complete logo with "schemory" wordmark (light backgrounds)
+- **logo-full-dark.svg** — Complete logo with "schemory" wordmark (dark backgrounds)
 
 ## Color Palette
-- **Primary**: `#8B5CF6` (Purple)
-- **Dark**: `#1A1A1A` (Near black)
+- **Brand Purple**: `#7878F8` (Periwinkle violet)
+- **Dark**: `#1A1A2E` (Dark navy-black)
 - **Light**: `#FFFFFF` (White)
+
+## Two-Tone Design
+The symbol uses a two-tone scheme to give it visual character:
+- Left `{` — always in brand purple `#7878F8`
+- Right `}` — adapts to background: dark `#1A1A2E` on light bg, white `#FFFFFF` on dark/purple bg
+- `=` — matches the left brace color
 
 ## Usage
 - Use `logo-light.svg` for light theme app icons

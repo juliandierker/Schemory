@@ -414,4 +414,314 @@ describe('item routes', () => {
     const body = response.json();
     expect(body.error.code).toBe('INVALID_REQUEST');
   });
+
+  // ==========================================================================
+  // Team-based filtering and relations tests
+  // ==========================================================================
+
+  describe('team-based item operations', () => {
+    it('GET /items includes teamName in response', async () => {
+      const accessToken = await getAccessToken(testEmailService);
+      const teamName = `test-team-with-name-${Date.now()}`;
+      await joinTeam(accessToken, teamName);
+
+      // Create an item
+      await request('PUT', '/items/TeamItemWithName', {
+        kind: 'schema',
+        content: '{"test": "team name"}',
+        lastKnownVersion: 0,
+      }, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      // Get all items and verify teamName is included
+      const response = await request('GET', '/items', undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.items).toBeDefined();
+      expect(body.items.length).toBeGreaterThan(0);
+      
+      const itemWithTeamName = body.items.find((item: any) => item.name === 'TeamItemWithName');
+      expect(itemWithTeamName).toBeDefined();
+      expect(itemWithTeamName.teamName).toBe(teamName);
+    });
+
+    it('GET /items/:name includes teamName in response', async () => {
+      const accessToken = await getAccessToken(testEmailService);
+      const teamName = `test-team-single-item-${Date.now()}`;
+      await joinTeam(accessToken, teamName);
+
+      // Create an item
+      await request('PUT', '/items/SingleTeamItem', {
+        kind: 'schema',
+        content: '{"test": "single"}',
+        lastKnownVersion: 0,
+      }, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      // Get single item and verify teamName is included
+      const response = await request('GET', '/items/SingleTeamItem', undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.item).toBeDefined();
+      expect(body.item.teamName).toBe(teamName);
+    });
+
+    it('GET /items?teamId= filters items by team', async () => {
+      // Setup: create user with two teams
+      const accessToken = await getAccessToken(testEmailService);
+      const teamA = `team-a-filter-${Date.now()}`;
+      const teamB = `team-b-filter-${Date.now()}`;
+      
+      await joinTeam(accessToken, teamA);
+      await joinTeam(accessToken, teamB);
+
+      // Get team IDs to use in filtering
+      const teamsResponse = await request('GET', '/teams', undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+      
+      expect(teamsResponse.statusCode).toBe(200);
+      const teamsBody = teamsResponse.json();
+      expect(teamsBody.teams).toHaveLength(2);
+      
+      const teamAObj = teamsBody.teams.find((t: any) => t.name === teamA);
+      const teamBObj = teamsBody.teams.find((t: any) => t.name === teamB);
+      
+      expect(teamAObj).toBeDefined();
+      expect(teamBObj).toBeDefined();
+
+      // Create items in each team by first joining the specific team
+      // Create item in team A
+      await request('PUT', '/items/TeamAFilterItem', {
+        kind: 'schema',
+        content: '{"team": "A"}',
+        lastKnownVersion: 0,
+        teamId: teamAObj.id,
+      }, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      // Create item in team B
+      await request('PUT', '/items/TeamBFilterItem', {
+        kind: 'schema',
+        content: '{"team": "B"}',
+        lastKnownVersion: 0,
+        teamId: teamBObj.id,
+      }, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      // Filter by team A
+      const responseA = await request('GET', `/items?teamId=${teamAObj.id}`, undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      expect(responseA.statusCode).toBe(200);
+      const bodyA = responseA.json();
+      expect(bodyA.items).toBeDefined();
+      expect(bodyA.items.length).toBe(1);
+      expect(bodyA.items[0].name).toBe('TeamAFilterItem');
+      expect(bodyA.items[0].teamName).toBe(teamA);
+
+      // Filter by team B
+      const responseB = await request('GET', `/items?teamId=${teamBObj.id}`, undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      expect(responseB.statusCode).toBe(200);
+      const bodyB = responseB.json();
+      expect(bodyB.items).toBeDefined();
+      expect(bodyB.items.length).toBe(1);
+      expect(bodyB.items[0].name).toBe('TeamBFilterItem');
+      expect(bodyB.items[0].teamName).toBe(teamB);
+    });
+
+    it('GET /items?teamId= invalid returns 400', async () => {
+      const accessToken = await getAccessToken(testEmailService);
+      const teamName = `test-team-invalid-id-${Date.now()}`;
+      await joinTeam(accessToken, teamName);
+
+      const response = await request('GET', '/items?teamId=invalid', undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body.error.code).toBe('INVALID_TEAM_ID');
+    });
+
+    it('PUT /items/:name with teamId creates item in specified team', async () => {
+      const accessToken = await getAccessToken(testEmailService);
+      const teamName = `test-team-specific-${Date.now()}`;
+      await joinTeam(accessToken, teamName);
+
+      // Get team ID
+      const teamsResponse = await request('GET', '/teams', undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+      
+      expect(teamsResponse.statusCode).toBe(200);
+      const teamsBody = teamsResponse.json();
+      const targetTeam = teamsBody.teams.find((t: any) => t.name === teamName);
+      expect(targetTeam).toBeDefined();
+
+      // Create item in specific team
+      const response = await request('PUT', '/items/SpecificTeamItem', {
+        kind: 'schema',
+        content: '{"test": "specific team"}',
+        lastKnownVersion: 0,
+        teamId: targetTeam.id,
+      }, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.item).toBeDefined();
+      expect(body.item.teamName).toBe(teamName);
+      
+      // Verify the item was created in the correct team by filtering
+      const filterResponse = await request('GET', `/items?teamId=${targetTeam.id}`, undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+      
+      expect(filterResponse.statusCode).toBe(200);
+      const filterBody = filterResponse.json();
+      expect(filterBody.items).toHaveLength(1);
+      expect(filterBody.items[0].name).toBe('SpecificTeamItem');
+      expect(filterBody.items[0].teamName).toBe(teamName);
+    });
+
+    it('PUT /items/:name with invalid teamId returns 400', async () => {
+      const accessToken = await getAccessToken(testEmailService);
+      const teamName = `test-team-invalid-${Date.now()}`;
+      await joinTeam(accessToken, teamName);
+
+      const response = await request('PUT', '/items/InvalidTeamItem', {
+        kind: 'schema',
+        content: '{"test": "invalid"}',
+        lastKnownVersion: 0,
+        teamId: 'invalid',
+      }, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body.error.code).toBe('INVALID_TEAM_ID');
+    });
+
+    it('PUT /items/:name with teamId for non-member team returns 404', async () => {
+      // Create two users
+      const user1Token = await getAccessToken(testEmailService);
+      const user2Token = await getAccessToken(testEmailService);
+
+      // User 1 joins team A
+      const teamA = `team-a-nonmember-${Date.now()}`;
+      await joinTeam(user1Token, teamA);
+
+      // Get team ID for team A
+      const teamsResponse = await request('GET', '/teams', undefined, {
+        Authorization: `Bearer ${user1Token}`,
+      });
+      
+      expect(teamsResponse.statusCode).toBe(200);
+      const teamsBody = teamsResponse.json();
+      const targetTeam = teamsBody.teams.find((t: any) => t.name === teamA);
+      expect(targetTeam).toBeDefined();
+
+      // User 2 tries to create item in User 1's team (should fail)
+      const response = await request('PUT', '/items/NonMemberItem', {
+        kind: 'schema',
+        content: '{"test": "non-member"}',
+        lastKnownVersion: 0,
+        teamId: targetTeam.id,
+      }, {
+        Authorization: `Bearer ${user2Token}`,
+      });
+
+      expect(response.statusCode).toBe(404);
+      const body = response.json();
+      expect(body.error.code).toBe('TEAM_NOT_FOUND');
+    });
+
+    it('GET /items sorted by team name and item name', async () => {
+      const accessToken = await getAccessToken(testEmailService);
+      
+      // Create teams in non-alphabetical order
+      const teamZ = `z-team-sort-${Date.now()}`;
+      const teamA = `a-team-sort-${Date.now()}`;
+      const teamM = `m-team-sort-${Date.now()}`;
+      
+      await joinTeam(accessToken, teamZ);
+      await joinTeam(accessToken, teamA);
+      await joinTeam(accessToken, teamM);
+
+      // Get team IDs
+      const teamsResponse = await request('GET', '/teams', undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+      
+      expect(teamsResponse.statusCode).toBe(200);
+      const teamsBody = teamsResponse.json();
+      const teamZObj = teamsBody.teams.find((t: any) => t.name === teamZ);
+      const teamAObj = teamsBody.teams.find((t: any) => t.name === teamA);
+      const teamMObj = teamsBody.teams.find((t: any) => t.name === teamM);
+
+      // Create items in each team in non-alphabetical order
+      await request('PUT', '/items/ZetaItem', {
+        kind: 'schema',
+        content: '{"order": "z"}',
+        lastKnownVersion: 0,
+        teamId: teamZObj.id,
+      }, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      await request('PUT', '/items/AlphaItem', {
+        kind: 'schema',
+        content: '{"order": "a"}',
+        lastKnownVersion: 0,
+        teamId: teamAObj.id,
+      }, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      await request('PUT', '/items/MuItem', {
+        kind: 'schema',
+        content: '{"order": "m"}',
+        lastKnownVersion: 0,
+        teamId: teamMObj.id,
+      }, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      // Get all items and verify they are sorted by team name then item name
+      const response = await request('GET', '/items', undefined, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.items).toBeDefined();
+      expect(body.items.length).toBe(3);
+      
+      // Should be sorted: A team first, then M team, then Z team
+      // Within each team, items should be sorted by name
+      expect(body.items[0].teamName).toBe(teamA);
+      expect(body.items[0].name).toBe('AlphaItem');
+      expect(body.items[1].teamName).toBe(teamM);
+      expect(body.items[1].name).toBe('MuItem');
+      expect(body.items[2].teamName).toBe(teamZ);
+      expect(body.items[2].name).toBe('ZetaItem');
+    });
+  });
 });

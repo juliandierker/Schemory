@@ -9,9 +9,10 @@ import { readConfig } from '../config.js';
 
 export function createPushCommand(): Command {
   return new Command('push')
-    .description('Push a schema or type. Usage: schemory push <filePath> or schemory push <name>')
+    .description('Push a schema or type. Usage: schemory push <filePath> or schemory push <name> [--team <teamId>]')
     .argument('<pathOrName>', 'File path (e.g., ./mytype.ts) or item name')
-    .action(async (pathOrName: string) => {
+    .option('--team <teamId>', 'Push to specific team ID (defaults to first team)')
+    .action(async (pathOrName: string, options?: { team?: string }) => {
       if (!pathOrName || pathOrName.trim().length === 0) {
         console.error('Error: File path or item name is required');
         process.exit(1);
@@ -109,12 +110,25 @@ export function createPushCommand(): Command {
         lastKnownVersion = undefined;
       }
 
-      // PUT /items/:name with { kind, content, lastKnownVersion }
-      const response = await http.put(`/items/${encodeURIComponent(itemName)}`, {
+      // PUT /items/:name with { kind, content, lastKnownVersion, teamId }
+      const requestBody: { kind: string; content: string; lastKnownVersion?: number; teamId?: number } = {
         kind,
         content,
         lastKnownVersion,
-      });
+      };
+      
+      // If team option is specified, add it to the request
+      if (options?.team) {
+        const teamIdNum = parseInt(options.team, 10);
+        if (!isNaN(teamIdNum)) {
+          requestBody.teamId = teamIdNum;
+        } else {
+          console.error(`Error: Invalid team ID '${options.team}'. Must be a number.`);
+          process.exit(1);
+        }
+      }
+      
+      const response = await http.put(`/items/${encodeURIComponent(itemName)}`, requestBody);
 
       if (response.error) {
         // Handle specific error cases

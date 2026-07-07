@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import logoLightUrl from '../assets/logo-full.svg';
+import logoDarkUrl from '../assets/logo-full-dark.svg';
 import {
-  LogoIcon,
-  UserIcon,
   PlusIcon,
   SunIcon,
   MoonIcon,
@@ -18,11 +19,12 @@ interface HeaderbarProps {
 
 export default function Headerbar({ onCreateTeam, onCreateFile }: HeaderbarProps) {
   const { theme, toggleTheme } = useTheme();
-  const { logout, sessionToken } = useAuth();
+  const { logout, sessionToken, user } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -38,16 +40,22 @@ export default function Headerbar({ onCreateTeam, onCreateFile }: HeaderbarProps
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Get user initials for avatar (placeholder)
+  // Get user initials for avatar
   const getUserInitial = () => {
-    // Extract user info from session token or use placeholder
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
     if (sessionToken) {
-      // Simple hash-based initial for demo purposes
-      const hash = sessionToken.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      return letters[hash % letters.length];
+      // Fallback: use first character after sk_ prefix
+      const cleanToken = sessionToken.startsWith('sk_') ? sessionToken.slice(3) : sessionToken;
+      return cleanToken.charAt(0).toUpperCase();
     }
     return 'U';
+  };
+
+  const handleNavigateToCli = () => {
+    navigate('/cli');
+    setIsUserMenuOpen(false);
   };
 
   const handleCreateTeam = () => {
@@ -69,11 +77,12 @@ export default function Headerbar({ onCreateTeam, onCreateFile }: HeaderbarProps
     <header className="fixed top-0 left-0 right-0 z-50 bg-header-bg border-b border-header-border h-16">
       <div className="max-w-full mx-auto px-6 h-full flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 flex items-center justify-center bg-primary rounded-lg">
-            <LogoIcon className="text-white" />
-          </div>
-          <span className="text-xl font-display font-bold text-text">Schemory</span>
+        <div className="flex items-center">
+          <img
+            src={theme === 'dark' ? logoDarkUrl : logoLightUrl}
+            alt="Schemory"
+            className="h-8 w-auto"
+          />
         </div>
 
         {/* Right side: Theme toggle, Create dropdown, User menu */}
@@ -134,16 +143,17 @@ export default function Headerbar({ onCreateTeam, onCreateFile }: HeaderbarProps
 
             {/* User dropdown menu */}
             {isUserMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-surface-elevated border border-border rounded-lg shadow-lg py-2 z-50">
-                <div className="px-4 py-2 text-sm">
-                  <div className="font-medium text-text">User</div>
-                  <div className="text-text-secondary text-xs">
-                    {sessionToken ? `${sessionToken.slice(0, 8)}...` : 'Not logged in'}
-                  </div>
-                </div>
+              <div className="absolute right-0 top-full mt-2 w-64 bg-surface-elevated border border-border rounded-lg shadow-lg py-2 z-50">
+                <button
+                  onClick={handleNavigateToCli}
+                  className="w-full px-4 py-2 text-left hover:bg-hover transition-colors text-sm"
+                >
+                  <div className="font-medium text-text">{user?.email || 'User'}</div>
+                  <div className="text-text-secondary text-xs">Click to view CLI commands</div>
+                </button>
                 <button
                   onClick={handleLogout}
-                  className="w-full px-4 py-2 text-left text-error hover:bg-hover transition-colors flex items-center space-x-2 text-sm mt-2"
+                  className="w-full px-4 py-2 text-left text-error hover:bg-hover transition-colors flex items-center space-x-2 text-sm mt-2 border-t border-border pt-2"
                 >
                   <LogoutIcon />
                   <span>Log Out</span>

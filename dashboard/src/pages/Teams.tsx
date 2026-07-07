@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import JoinTeamForm from '../components/JoinTeamForm';
+import CreateTeamForm from '../components/CreateTeamForm';
+import { ArrowRightIcon } from '../components/icons';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -81,16 +83,28 @@ export default function Teams() {
           {isLoading ? (
             <p className="text-text text-opacity-70">Loading teams...</p>
           ) : teams.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-text text-opacity-70 mb-4">
-                You are not a member of any team yet.
+            <div className="text-center py-12">
+              <h3 className="text-xl font-display font-semibold text-text mb-4">
+                No Teams Yet
+              </h3>
+              <p className="text-text text-opacity-70 mb-6 max-w-md mx-auto">
+                You are not a member of any team yet. Use the form below to create a team or join an existing one.
               </p>
-              <p className="text-text text-opacity-70 mb-2">
-                Join a team to see it here, or use the CLI:
-              </p>
-              <code className="font-mono bg-border px-2 py-1 rounded text-sm">
-                npx schemory join &lt;team-name&gt;
-              </code>
+              <div className="space-y-4">
+                <Link
+                  to="/cli"
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-primary text-white font-body rounded-lg hover:bg-opacity-90 transition-colors"
+                >
+                  <span>Go to CLI Setup</span>
+                  <ArrowRightIcon className="w-4 h-4" />
+                </Link>
+                <p className="text-text text-opacity-50 text-sm">
+                  or use the command:
+                </p>
+                <code className="font-mono bg-border px-3 py-2 rounded text-sm block">
+                  npx schemory create &lt;team-name&gt;
+                </code>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -133,6 +147,19 @@ export default function Teams() {
               </table>
             </div>
           )}
+        </section>
+
+        {/* Create Team Form */}
+        <section className="bg-surface border border-border rounded-lg p-6 mb-8">
+          <h2 className="text-lg font-display font-semibold text-text mb-4">
+            Create a Team
+          </h2>
+          <p className="text-text text-opacity-70 mb-4">
+            Create a new team to start sharing TypeScript types and JSON schemas.
+          </p>
+          <div className="max-w-md">
+            <CreateTeamForm onSuccess={handleJoinSuccess} />
+          </div>
         </section>
 
         {/* Join Team Form */}

@@ -151,8 +151,9 @@ export function createActivateCommand(): Command {
         }
 
         const userId = data.user?.id?.toString() || '';
+        const userEmail = data.user?.email;
         const expiresAt = data.expiresAt || new Date(Date.now() + 24 * 365 * 60 * 60 * 1000).toISOString();
-        setAuthToken(data.accessToken, expiresAt, userId);
+        setAuthToken(data.accessToken, expiresAt, userId, userEmail);
 
         console.log('\nAccount activated successfully');
         console.log(`User: ${data.user?.email}`);

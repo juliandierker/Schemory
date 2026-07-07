@@ -11,6 +11,11 @@ import { createInviteCommand } from './commands/invite.js';
 import { createPullCommand } from './commands/pull.js';
 import { createPullAllCommand } from './commands/pullAll.js';
 import { createPushCommand } from './commands/push.js';
+import { createUseCommand } from './commands/use.js';
+import { createStatusCommand } from './commands/status.js';
+import { createHelpCommand } from './commands/help.js';
+import { createSyncCommand } from './commands/sync.js';
+import { createLogoutCommand } from './commands/logout.js';
 
 /**
  * Create the main CLI program
@@ -34,7 +39,12 @@ function createCLI(): Command {
     .addCommand(createInviteCommand())
     .addCommand(createPullCommand())
     .addCommand(createPullAllCommand())
-    .addCommand(createPushCommand());
+    .addCommand(createPushCommand())
+    .addCommand(createUseCommand())
+    .addCommand(createStatusCommand())
+    .addCommand(createHelpCommand())
+    .addCommand(createSyncCommand())
+    .addCommand(createLogoutCommand());
 
   // Global error handling
   program.configureOutput({

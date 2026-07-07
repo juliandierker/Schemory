@@ -13,7 +13,12 @@ import {
   ChevronDown,
   LogOut,
   Menu,
-  X
+  X,
+  Copy,
+  Check,
+  ArrowRight,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 interface IconProps {
@@ -40,11 +45,6 @@ export const BookIcon = ({ className = 'w-5 h-5', size }: IconProps) => (
 
 export const FilesIcon = ({ className = 'w-5 h-5', size }: IconProps) => (
   <FileText className={className} size={size} />
-);
-
-// Header icons
-export const LogoIcon = ({ className = 'w-5 h-5', size }: IconProps) => (
-  <LayoutDashboard className={className} size={size} />
 );
 
 export const UserIcon = ({ className = 'w-5 h-5', size }: IconProps) => (
@@ -102,4 +102,24 @@ export const TypeScriptIcon = ({ className = 'w-5 h-5' }: IconProps) => (
     <path d="M2 7L12 12L22 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     <path d="M12 22V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
+);
+
+export const CopyIcon = ({ className = 'w-4 h-4', size }: IconProps) => (
+  <Copy className={className} size={size} />
+);
+
+export const CheckIcon = ({ className = 'w-4 h-4', size }: IconProps) => (
+  <Check className={className} size={size} />
+);
+
+export const ArrowRightIcon = ({ className = 'w-4 h-4', size }: IconProps) => (
+  <ArrowRight className={className} size={size} />
+);
+
+export const EditIcon = ({ className = 'w-4 h-4', size }: IconProps) => (
+  <Pencil className={className} size={size} />
+);
+
+export const DeleteIcon = ({ className = 'w-4 h-4', size }: IconProps) => (
+  <Trash2 className={className} size={size} />
 );

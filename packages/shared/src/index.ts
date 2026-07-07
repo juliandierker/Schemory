@@ -56,6 +56,7 @@ export type ItemKind = "schema" | "type";
 export interface Item {
   id: string;
   teamId: string;
+  teamName?: string;
   name: string;
   kind: ItemKind;
   content: string;
@@ -72,6 +73,10 @@ export interface ItemCreateUpdateRequest {
 
 export interface ItemsResponse {
   items: Item[];
+}
+
+export interface ItemWithTeam extends Item {
+  teamName: string;
 }
 
 export interface ItemResponse {

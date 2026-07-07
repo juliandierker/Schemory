@@ -19,7 +19,7 @@ describe('Teams page', () => {
     expect(screen.getByText('Loading teams...')).toBeInTheDocument();
   });
 
-  it('renders empty state with join invitation when user has no teams', async () => {
+  it('renders empty state when user has no teams', async () => {
     const mockTeams: { teams: never[] } = { teams: [] };
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
@@ -29,10 +29,10 @@ describe('Teams page', () => {
     render(<Teams />);
 
     await waitFor(() => {
-      expect(screen.getByText('You are not a member of any team yet.')).toBeInTheDocument();
+      expect(screen.getByText('No Teams Yet')).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/npx schemory join/)).toBeInTheDocument();
+    expect(screen.getByText('Create a Team')).toBeInTheDocument();
     expect(screen.getByText('Join a Team')).toBeInTheDocument();
   });
 
@@ -72,7 +72,7 @@ describe('Teams page', () => {
     });
   });
 
-  it('has a link back to the dashboard', async () => {
+  it('has a link to CLI setup when no teams exist', async () => {
     const mockTeams: { teams: never[] } = { teams: [] };
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
@@ -82,9 +82,68 @@ describe('Teams page', () => {
     render(<Teams />);
 
     await waitFor(() => {
-      const link = screen.getByText('Back to Dashboard');
+      const link = screen.getByText('Go to CLI Setup');
       expect(link).toBeInTheDocument();
-      expect(link.closest('a')).toHaveAttribute('href', '/');
+      expect(link.closest('a')).toHaveAttribute('href', '/cli');
+    });
+  });
+
+  it('renders Create Team form when user has no teams', async () => {
+    const mockTeams: { teams: never[] } = { teams: [] };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockTeams),
+    }));
+
+    render(<Teams />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Create a Team')).toBeInTheDocument();
+    });
+
+    expect(screen.getByLabelText('Team Name')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter team name')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create Team' })).toBeInTheDocument();
+  });
+
+  it('renders Create Team form when user has existing teams', async () => {
+    const mockTeams = {
+      teams: [
+        { id: 1, name: 'team-alpha', role: 'member' },
+      ],
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockTeams),
+    }));
+
+    render(<Teams />);
+
+    await waitFor(() => {
+      expect(screen.getByText('team-alpha')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Create a Team')).toBeInTheDocument();
+    expect(screen.getByLabelText('Team Name')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create Team' })).toBeInTheDocument();
+  });
+
+  it('displays both Create Team and Join Team sections', async () => {
+    const mockTeams = {
+      teams: [
+        { id: 1, name: 'team-alpha', role: 'member' },
+      ],
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockTeams),
+    }));
+
+    render(<Teams />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Create a Team')).toBeInTheDocument();
+      expect(screen.getByText('Join a Team')).toBeInTheDocument();
     });
   });
 });

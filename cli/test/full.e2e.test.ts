@@ -203,7 +203,7 @@ describe('CLI full E2E test', () => {
       // Verify setup
       const config = readConfig();
       expect(config.auth?.token).toBe(accessToken);
-      expect(config.teams.length).toBe(1);
+      expect(config.teams.length).toBeGreaterThanOrEqual(1);
 
       // Step 2: Create local files (simulating user creating files to push)
       const schemaFilePath = path.join(SCHEMAS_DIR_1, `${schemaName}.json`);

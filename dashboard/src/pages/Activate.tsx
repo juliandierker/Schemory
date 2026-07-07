@@ -97,8 +97,8 @@ export default function Activate() {
       }
 
       // Auto-login the user after activation
-      login(data.accessToken || '');
-      setSuccess('Account activated successfully! Redirecting to dashboard...');
+      login(data.accessToken || '', data.user?.email);
+      setSuccess('Account activated successfully! Redirecting to teams...');
       
       // Redirect to dashboard after a short delay
       setTimeout(() => {

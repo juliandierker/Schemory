@@ -23,6 +23,7 @@ export interface DbItem {
 export interface Item {
   id: number;
   teamId: number;
+  teamName?: string;
   name: string;
   kind: string;
   content: string;
@@ -38,15 +39,17 @@ export interface CreateUpdateItemRequest {
   kind: string;
   content: string;
   lastKnownVersion?: number;
+  teamId?: number;
 }
 
 /**
  * Map DB item to API response format
  */
-export function mapDbItemToItem(dbItem: DbItem): Item {
+export function mapDbItemToItem(dbItem: DbItem, teamName?: string): Item {
   return {
     id: dbItem.id,
     teamId: dbItem.team_id,
+    teamName,
     name: dbItem.name,
     kind: dbItem.kind,
     content: dbItem.content,
@@ -57,7 +60,7 @@ export function mapDbItemToItem(dbItem: DbItem): Item {
 }
 
 /**
- * Get all items across all teams the user belongs to
+ * Get all items across all teams the user belongs to, with team names
  */
 export async function getAllItemsForUser(userId: number): Promise<DbItem[]> {
   const result = await query<DbItem>(
@@ -70,6 +73,84 @@ export async function getAllItemsForUser(userId: number): Promise<DbItem[]> {
   );
 
   return result.rows;
+}
+
+/**
+ * Get all items for a specific team that the user belongs to, with team name
+ */
+export async function getAllItemsForUserWithTeams(userId: number): Promise<{item: DbItem; teamName: string}[]> {
+  const result = await query<{
+    id: number;
+    team_id: number;
+    name: string;
+    kind: string;
+    content: string;
+    version: number;
+    created_at: string;
+    updated_at: string;
+    team_name: string;
+  }>(
+    `SELECT i.id, i.team_id, i.name, i.kind, i.content, i.version, i.created_at, i.updated_at, t.name as team_name
+     FROM items i
+     JOIN team_members tm ON i.team_id = tm.team_id
+     JOIN teams t ON i.team_id = t.id
+     WHERE tm.user_id = $1
+     ORDER BY t.name, i.name`,
+    [userId]
+  );
+
+  return result.rows.map(row => ({
+    item: {
+      id: row.id,
+      team_id: row.team_id,
+      name: row.name,
+      kind: row.kind,
+      content: row.content,
+      version: row.version,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    },
+    teamName: row.team_name,
+  }));
+}
+
+/**
+ * Get all items for a specific team that the user belongs to
+ */
+export async function getItemsByTeamWithTeamInfo(userId: number, teamId: number): Promise<{item: DbItem; teamName: string}[]> {
+  const result = await query<{
+    id: number;
+    team_id: number;
+    name: string;
+    kind: string;
+    content: string;
+    version: number;
+    created_at: string;
+    updated_at: string;
+    team_name: string;
+  }>(
+    `SELECT i.id, i.team_id, i.name, i.kind, i.content, i.version, i.created_at, i.updated_at, t.name as team_name
+     FROM items i
+     JOIN team_members tm ON i.team_id = tm.team_id
+     JOIN teams t ON i.team_id = t.id
+     WHERE tm.user_id = $1 AND i.team_id = $2
+     ORDER BY i.name`,
+    [userId, teamId]
+  );
+
+  return result.rows.map(row => ({
+    item: {
+      id: row.id,
+      team_id: row.team_id,
+      name: row.name,
+      kind: row.kind,
+      content: row.content,
+      version: row.version,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    },
+    teamName: row.team_name,
+  }));
 }
 
 /**
@@ -276,4 +357,33 @@ export async function getItemsByTeam(userId: number, teamId: number): Promise<Db
   );
 
   return result.rows;
+}
+
+/**
+ * Delete an item
+ */
+export async function deleteItem(itemId: number, teamId: number, userId: number): Promise<boolean> {
+  // First, check if the user is a member of the team
+  const isMember = await isUserMemberOfTeam(userId, teamId);
+  if (!isMember) {
+    throw new Error('User is not a member of this team');
+  }
+
+  // Check if the item exists and belongs to the specified team
+  const existingItem = await query<{ id: number; team_id: number }>(
+    `SELECT id, team_id FROM items WHERE id = $1 AND team_id = $2`,
+    [itemId, teamId]
+  );
+
+  if (existingItem.rows.length === 0) {
+    throw new Error('Item not found or does not belong to this team');
+  }
+
+  // Delete the item
+  await query(
+    `DELETE FROM items WHERE id = $1 AND team_id = $2`,
+    [itemId, teamId]
+  );
+
+  return true;
 }

@@ -21,6 +21,7 @@ export interface AuthConfig {
   token: string;
   expiresAt: string;
   userId: string;
+  email?: string;
 }
 
 /**
@@ -254,12 +255,13 @@ export function addTeam(team: Team): void {
 /**
  * Set the auth token
  */
-export function setAuthToken(token: string, expiresAt: string, userId: string): void {
+export function setAuthToken(token: string, expiresAt: string, userId: string, email?: string): void {
   const config = readConfig();
   config.auth = {
     token,
     expiresAt,
     userId,
+    ...(email && { email }),
   };
   writeConfig(config);
 }
@@ -280,6 +282,21 @@ export function setDefaultTeam(teamName: string): void {
   const config = readConfig();
   config.defaultTeam = teamName;
   writeConfig(config);
+}
+
+/**
+ * Automatically set default team if user has exactly one team and no default set
+ * This provides quality of life improvement - when you have only 1 team, it becomes your active team
+ */
+export function autoSetDefaultTeamIfSingleTeam(): void {
+  const config = readConfig();
+  const teams = config.teams || [];
+  const hasDefaultTeam = config.defaultTeam;
+  
+  // If user has exactly one team and no default team set, auto-select it
+  if (teams.length === 1 && !hasDefaultTeam) {
+    setDefaultTeam(teams[0].name);
+  }
 }
 
 /**

@@ -5,7 +5,7 @@
 import { Command } from 'commander';
 import { createInterface } from 'readline';
 import { getHttpClient, setHttpClientConfig } from '../http.js';
-import { readConfig, setAuthToken } from '../config.js';
+import { readConfig, setAuthToken, addTeam, autoSetDefaultTeamIfSingleTeam } from '../config.js';
 
 // Hide input for password (simple approach - use stdin directly)
 async function promptPassword(question: string): Promise<string> {
@@ -129,19 +129,32 @@ export function createLoginCommand(): Command {
           process.exit(1);
         }
 
-        // Extract user ID as string
+        // Extract user ID as string and email
         const userId = data.user?.id?.toString() || '';
+        const userEmail = data.user?.email;
         const expiresAt = data.expiresAt || new Date(Date.now() + 24 * 365 * 60 * 60 * 1000).toISOString();
 
         // Save token to config
-        setAuthToken(data.accessToken, expiresAt, userId);
+        setAuthToken(data.accessToken, expiresAt, userId, userEmail);
 
         console.log('\nLogged in successfully');
         console.log(`User: ${data.user?.email}`);
         
-        // If teams are returned, we could add them to config too
+        // If teams are returned, add them to config and auto-select single team
         if (data.teams && data.teams.length > 0) {
           console.log(`You have access to ${data.teams.length} team(s)`);
+          
+          // Add all teams to config
+          for (const team of data.teams) {
+            addTeam({
+              id: team.id.toString(),
+              name: team.name,
+              createdAt: team.createdAt || new Date().toISOString(),
+            });
+          }
+          
+          // Auto-select the single team if that's the case
+          autoSetDefaultTeamIfSingleTeam();
         }
       } else {
         console.error('Error: Unexpected response from server');

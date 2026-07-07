@@ -58,6 +58,29 @@ describe('config module', () => {
       expect(readConfig.auth!.userId).toBe('usr_123');
     });
 
+    it('round-trips config with auth including email', () => {
+      const config: SchemoryConfig = {
+        version: '1',
+        auth: {
+          token: 'sk_test_12345',
+          expiresAt: '2025-01-01T00:00:00Z',
+          userId: 'usr_123',
+          email: 'user@example.com',
+        },
+        teams: [],
+      };
+
+      const configPath = path.join(testDir, 'auth-email.json');
+      writeConfigTo(configPath, config);
+
+      const content = fs.readFileSync(configPath, 'utf-8');
+      const readConfig: SchemoryConfig = JSON.parse(content);
+
+      expect(readConfig.auth).toBeDefined();
+      expect(readConfig.auth!.token).toBe('sk_test_12345');
+      expect(readConfig.auth!.email).toBe('user@example.com');
+    });
+
     it('round-trips config with teams', () => {
       const config: SchemoryConfig = {
         version: '1',

@@ -33,7 +33,10 @@ const DEFAULT_API_URL = process.env.NODE_ENV === 'development'
  * Create an HTTP client with configuration
  */
 export function createHttpClient(config: HttpClientConfig = {}) {
-  const apiUrl = config.apiUrl || DEFAULT_API_URL;
+  // Migrate old localhost configs to default
+  const apiUrl = (config.apiUrl && config.apiUrl !== 'http://localhost:3000')
+    ? config.apiUrl
+    : DEFAULT_API_URL;
   const token = config.token;
 
   /**

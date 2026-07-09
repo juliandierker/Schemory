@@ -103,8 +103,8 @@ function readConfigFile(filePath: string): SchemoryConfig | null {
       config.teams = [];
     }
 
-    // Set default API URL if not present
-    if (!config.apiUrl) {
+    // Set default API URL if not present or if it's localhost (migrate old dev configs)
+    if (!config.apiUrl || config.apiUrl === 'http://localhost:3000') {
       config.apiUrl = DEFAULT_API_URL;
     }
 

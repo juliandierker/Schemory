@@ -55,10 +55,9 @@ RUN pnpm --filter @schemory/dashboard build
 # =============================================================================
 FROM nginx:1.25-alpine
 
-# Remove default nginx user and create our non-root user
+# Create non-root user (keep nginx user for nginx process)
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 -G nodejs && \
-    deluser nginx 2>/dev/null || true
+    adduser -S nodejs -u 1001 -G nodejs
 
 # Copy built static files from builder
 COPY --from=builder --chown=nodejs:nodejs /app/dashboard/dist/ /usr/share/nginx/html/

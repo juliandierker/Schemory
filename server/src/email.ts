@@ -1,6 +1,7 @@
 // Email service implementation
 // This is the seam defined in ARCHITECTURE.md
-// Production uses Resend; dev always logs activation link as convenience
+// Production uses Resend with configurable from address via EMAIL_FROM_ADDRESS env var
+// Dev always logs activation link as convenience
 
 import { ACTIVATION_BASE_URL, DASHBOARD_URL, isDev } from './config.js';
 
@@ -49,7 +50,7 @@ export class ResendEmailService implements EmailService {
       const resend = new Resend(resendApiKey);
 
       await resend.emails.send({
-        from: 'noreply@schemory.app',
+        from: process.env.EMAIL_FROM_ADDRESS || 'noreply@schemory.app',
         to: email,
         subject: 'Activate your Schemory account',
         html: `<!DOCTYPE html>
@@ -112,11 +113,13 @@ export class ResendEmailService implements EmailService {
       });
     } catch (error) {
       // Never throw - signup must succeed even if email fails
-      // In production, log only generic message (NO token/link)
+      // Log error details for debugging
+      const errorMessage = error instanceof Error ? error.message : String(error);
       if (!isDev()) {
-        console.warn('activation email failed to send');
+        console.warn('activation email failed to send:', errorMessage);
+      } else {
+        console.warn('activation email failed to send:', error);
       }
-      // In dev, the link was already logged above, so we can show the error too
     }
   }
 }

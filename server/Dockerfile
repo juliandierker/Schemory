@@ -78,7 +78,6 @@ COPY --chown=nodejs:nodejs packages/shared/package.json ./packages/shared/packag
 
 # Copy migration runner script
 COPY server/run-migrations.js /app/run-migrations.js
-RUN chmod +x /app/run-migrations.js
 
 # Environment variables
 ENV NODE_ENV=production

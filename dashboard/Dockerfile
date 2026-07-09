@@ -9,6 +9,9 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
+# Required for Vite/pnpm builds
+ENV NODE_ENV=production
+
 # Install pnpm globally
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 ENV PNPM_HOME=/usr/local/pnpm
@@ -25,6 +28,9 @@ COPY packages/shared/package.json packages/shared/
 
 # Copy cli package for workspace resolution
 COPY cli/package.json cli/
+
+# Copy server package for complete workspace resolution
+COPY server/package.json server/
 
 # Install all dependencies (including dev dependencies for build)
 RUN pnpm install --frozen-lockfile

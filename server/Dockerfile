@@ -23,7 +23,7 @@ COPY packages/shared/package.json packages/shared/
 COPY cli/package.json cli/
 
 # Install all dependencies (including dev dependencies for build)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --shamefully-hoist
 
 # Copy source files
 COPY server/src/ server/src/
@@ -55,8 +55,8 @@ RUN chown nodejs:nodejs /app
 # Switch to non-root user
 USER nodejs
 
-# Copy all server production dependencies (including node-pg-migrate and its dependencies like glob)
-COPY --from=builder --chown=nodejs:nodejs /app/server/node_modules/ /app/node_modules/
+# Copy all production dependencies from builder (with --shamefully-hoist, they're in root node_modules)
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules/ /app/node_modules/
 
 # Copy built @schemory/shared package to node_modules
 RUN mkdir -p /app/node_modules/@schemory

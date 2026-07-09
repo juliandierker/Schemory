@@ -67,7 +67,7 @@ export default function Layout({ children, onCreateTeam, onCreateFile }: LayoutP
 
       {/* Main content area with padding for fixed header and sidebar */}
       <main 
-        className={`pt-16 transition-all duration-300 ${isMobileSidebarOpen ? 'lg:ml-0' : ''} lg:${isSidebarCollapsed ? 'ml-16' : 'ml-64'}`}
+        className={`pt-16 transition-all duration-300 ${isMobileSidebarOpen ? 'lg:ml-0' : ''} ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}
         style={{ minHeight: 'calc(100vh - 4rem)' }}
       >
         {children}

@@ -79,7 +79,7 @@ services:
       context: .
       dockerfile: dashboard/Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://server:3000}
+        VITE_API_URL: ${VITE_API_URL:-}
     container_name: schemory-dashboard-prod
     environment:
       NODE_ENV: production

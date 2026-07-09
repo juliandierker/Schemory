@@ -20,6 +20,9 @@ ENV PATH="$PNPM_HOME:$PATH"
 # Copy root package.json, pnpm-workspace.yaml, lockfile, and tsconfig for workspace setup
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 
+# Ensure all workspace directories exist before copying package files
+RUN mkdir -p packages dashboard server cli
+
 # Copy dashboard package files
 COPY dashboard/package.json dashboard/
 
@@ -33,9 +36,15 @@ COPY cli/package.json cli/
 COPY server/package.json server/
 
 # Install all dependencies (including dev dependencies for build)
-RUN pnpm install --frozen-lockfile --shamefully-hoist
+RUN pnpm install --frozen-lockfile
 
-# Copy source files
+# Copy source files for ALL workspace packages (needed for type resolution)
+COPY server/src/ server/src/
+COPY server/tsconfig.json server/
+COPY server/migrations/ server/migrations/
+COPY server/run-migrations.js server/
+COPY cli/src/ cli/src/
+COPY cli/tsconfig.json cli/
 COPY dashboard/src/ dashboard/src/
 COPY dashboard/index.html dashboard/
 COPY dashboard/vite.config.ts dashboard/

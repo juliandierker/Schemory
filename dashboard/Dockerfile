@@ -20,24 +20,23 @@ ENV PATH="$PNPM_HOME:$PATH"
 # Copy root package.json, pnpm-workspace.yaml, lockfile, and tsconfig for workspace setup
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 
-# Copy all workspace package.json files
+# Copy package files for workspace resolution (matching server Dockerfile + dashboard)
+COPY server/package.json server/
 COPY packages/shared/package.json packages/shared/
 COPY cli/package.json cli/
-COPY server/package.json server/
 COPY dashboard/package.json dashboard/
 
 # Install all dependencies (including dev dependencies for build)
-# --shamefully-hoist ensures devDependency binaries (tsc, vite) are in root node_modules/.bin
+# --shamefully-hoist ensures workspace packages have node_modules with binaries
 RUN pnpm install --frozen-lockfile --shamefully-hoist
 
-# Set PATH to include root node_modules/.bin where tsc and vite are now hoisted
-ENV PATH="/app/node_modules/.bin:${PATH}"
-
-# Copy source files for ALL workspace packages
+# Copy source files
 COPY server/src/ server/src/
 COPY server/tsconfig.json server/
 COPY server/migrations/ server/migrations/
 COPY server/run-migrations.js server/
+COPY packages/shared/src/ packages/shared/src/
+COPY packages/shared/tsconfig.json packages/shared/
 COPY cli/src/ cli/src/
 COPY cli/tsconfig.json cli/
 COPY dashboard/src/ dashboard/src/
@@ -46,13 +45,9 @@ COPY dashboard/vite.config.ts dashboard/
 COPY dashboard/tsconfig.json dashboard/
 COPY dashboard/postcss.config.js dashboard/
 COPY dashboard/tailwind.config.js dashboard/
-COPY packages/shared/src/ packages/shared/src/
-COPY packages/shared/tsconfig.json packages/shared/
 
-# Build the shared package first
+# Build TypeScript
 RUN pnpm --filter @schemory/shared build
-
-# Build the dashboard (TypeScript + Vite build)
 RUN pnpm --filter @schemory/dashboard build
 
 # =============================================================================

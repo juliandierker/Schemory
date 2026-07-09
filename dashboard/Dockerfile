@@ -46,6 +46,10 @@ COPY dashboard/tailwind.config.js dashboard/
 # Set NODE_ENV for production build (after pnpm install so devDependencies are installed)
 ENV NODE_ENV=production
 
+# Allow VITE_API_URL to be passed from build args
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build TypeScript
 RUN pnpm --filter @schemory/shared build
 RUN pnpm --filter @schemory/dashboard build

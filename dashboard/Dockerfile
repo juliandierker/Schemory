@@ -9,9 +9,6 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Required for Vite/pnpm builds
-ENV NODE_ENV=production
-
 # Install pnpm globally
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 ENV PNPM_HOME=/usr/local/pnpm
@@ -45,6 +42,9 @@ COPY dashboard/vite.config.ts dashboard/
 COPY dashboard/tsconfig.json dashboard/
 COPY dashboard/postcss.config.js dashboard/
 COPY dashboard/tailwind.config.js dashboard/
+
+# Set NODE_ENV for production build (after pnpm install so devDependencies are installed)
+ENV NODE_ENV=production
 
 # Build TypeScript
 RUN pnpm --filter @schemory/shared build

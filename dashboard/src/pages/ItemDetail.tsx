@@ -95,7 +95,7 @@ export default function ItemDetail() {
     const fetchRevisions = async (itemData: Item) => {
       try {
         const response = await fetch(
-          `${API_BASE}/items/${encodeURIComponent(name)}/revisions?teamId=${itemData.teamId}`,
+          `${API_BASE}/items/${encodeURIComponent(name || '')}/revisions?teamId=${itemData.teamId}`,
           {
             headers: {
               Authorization: `Bearer ${sessionToken || ''}`,
@@ -207,7 +207,7 @@ export default function ItemDetail() {
   // Find the selected revision for display
   const selectedDisplayRevision = allRevisions.find(rev => 
     selectedRevision === rev || 
-    (selectedRevision === item && rev.isCurrent) ||
+    (selectedRevision && item && selectedRevision.id === item.id && rev.isCurrent) ||
     (selectedRevision && !rev.isCurrent && selectedRevision.id === rev.id)
   ) || allRevisions[0];
 

@@ -44,6 +44,9 @@ RUN pnpm --filter @schemory/shared build
 # =============================================================================
 FROM node:20-alpine AS final
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 -G nodejs

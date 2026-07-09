@@ -70,8 +70,6 @@ RUN chown nodejs:nodejs /etc/nginx/conf.d/default.conf && \
 # Change ownership of nginx directories
 RUN chown -R nodejs:nodejs /var/log/nginx /var/cache/nginx /etc/nginx 2>/dev/null || true
 
-# Switch to non-root user
-USER nodejs
 
 # Expose port
 EXPOSE 80

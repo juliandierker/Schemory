@@ -20,9 +20,6 @@ ENV PATH="$PNPM_HOME:$PATH"
 # Copy root package.json, pnpm-workspace.yaml, lockfile, and tsconfig for workspace setup
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 
-# Ensure all workspace directories exist before copying package files
-RUN mkdir -p packages dashboard server cli
-
 # Copy dashboard package files
 COPY dashboard/package.json dashboard/
 
@@ -36,6 +33,7 @@ COPY cli/package.json cli/
 COPY server/package.json server/
 
 # Install all dependencies (including dev dependencies for build)
+# --shamefully-hoist ensures devDependency binaries are available in root node_modules
 RUN pnpm install --frozen-lockfile --shamefully-hoist
 
 # Copy source files for ALL workspace packages (needed for type resolution)
@@ -55,12 +53,11 @@ COPY packages/shared/src/ packages/shared/src/
 COPY packages/shared/tsconfig.json packages/shared/
 
 # Build the shared package first
-# Ensure node_modules/.bin is in PATH for pnpm workspace packages
-ENV PATH="/app/node_modules/.bin:${PATH}"
-RUN pnpm --filter @schemory/shared build
+# pnpm workspace: devDependencies not hoisted by default, so use npx to resolve tsc
+RUN cd packages/shared && npx tsc
 
 # Build the dashboard (TypeScript + Vite build)
-RUN pnpm --filter @schemory/dashboard build
+RUN cd dashboard && npx tsc && npx vite build
 
 # =============================================================================
 # Stage 2: Final production image - minimal nginx to serve static files

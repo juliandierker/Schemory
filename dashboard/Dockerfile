@@ -36,7 +36,7 @@ COPY cli/package.json cli/
 COPY server/package.json server/
 
 # Install all dependencies (including dev dependencies for build)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --shamefully-hoist
 
 # Copy source files for ALL workspace packages (needed for type resolution)
 COPY server/src/ server/src/
@@ -55,6 +55,8 @@ COPY packages/shared/src/ packages/shared/src/
 COPY packages/shared/tsconfig.json packages/shared/
 
 # Build the shared package first
+# Ensure node_modules/.bin is in PATH for pnpm workspace packages
+ENV PATH="/app/node_modules/.bin:${PATH}"
 RUN pnpm --filter @schemory/shared build
 
 # Build the dashboard (TypeScript + Vite build)

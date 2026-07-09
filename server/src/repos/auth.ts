@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 // Token configuration
-const ACTIVATION_TOKEN_EXPIRY_HOURS = 24;
+export const ACTIVATION_TOKEN_EXPIRY_HOURS = 24;
 const ACCESS_TOKEN_EXPIRY_HOURS = 24 * 365; // 1 year
 const TOKEN_HASH_ROUNDS = 10;
 
@@ -20,7 +20,7 @@ function generateToken(): string {
 /**
  * Hash a token for storage
  */
-async function hashToken(token: string): Promise<string> {
+export async function hashToken(token: string): Promise<string> {
   return bcrypt.hash(token, TOKEN_HASH_ROUNDS);
 }
 

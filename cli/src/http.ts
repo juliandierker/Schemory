@@ -25,7 +25,9 @@ export interface HttpClientConfig {
 }
 
 // Default API URL from ARCHITECTURE.md
-const DEFAULT_API_URL = 'https://api.schemory.org';
+const DEFAULT_API_URL = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:3000'
+  : 'https://api.schemory.org';
 
 /**
  * Create an HTTP client with configuration

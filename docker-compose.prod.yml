@@ -9,9 +9,11 @@ version: '3.8'
 # - RESEND_API_KEY: Resend API key for sending emails
 # - EMAIL_FROM_ADDRESS: Email address for sending activation emails
 # - APP_BASE_URL: Base URL for the application (e.g., https://schemory.app)
-# - ACTIVATION_BASE_URL: Base URL for activation links (e.g., https://api.schemory.app/auth/activate)
+# - ACTIVATION_BASE_URL: Base URL for activation links (e.g., https://schemory.app/activate)
+# - VITE_API_URL: API base URL for dashboard (e.g., http://server:3000 for Docker internal)
 # - NODE_ENV: Set to "production"
 # - PORT: Server port (default: 3000)
+# - SERVER_PORT: Server port (default: 3000)
 # - DASHBOARD_PORT: Dashboard port (default: 80)
 
 services:
@@ -76,6 +78,8 @@ services:
     build:
       context: .
       dockerfile: dashboard/Dockerfile
+      environment:
+        VITE_API_URL: ${VITE_API_URL:-http://server:3000}
     container_name: schemory-dashboard-prod
     environment:
       NODE_ENV: production

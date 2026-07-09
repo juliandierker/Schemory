@@ -20,23 +20,20 @@ ENV PATH="$PNPM_HOME:$PATH"
 # Copy root package.json, pnpm-workspace.yaml, lockfile, and tsconfig for workspace setup
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 
-# Copy dashboard package files
+# Copy all workspace package.json files
+COPY packages/shared/package.json packages/shared/
+COPY cli/package.json cli/
+COPY server/package.json server/
 COPY dashboard/package.json dashboard/
 
-# Copy shared package (needed for workspace resolution)
-COPY packages/shared/package.json packages/shared/
-
-# Copy cli package for workspace resolution
-COPY cli/package.json cli/
-
-# Copy server package for complete workspace resolution
-COPY server/package.json server/
-
 # Install all dependencies (including dev dependencies for build)
-# --shamefully-hoist ensures devDependency binaries are available in root node_modules
+# --shamefully-hoist ensures devDependency binaries (tsc, vite) are in root node_modules/.bin
 RUN pnpm install --frozen-lockfile --shamefully-hoist
 
-# Copy source files for ALL workspace packages (needed for type resolution)
+# Set PATH to include root node_modules/.bin where tsc and vite are now hoisted
+ENV PATH="/app/node_modules/.bin:${PATH}"
+
+# Copy source files for ALL workspace packages
 COPY server/src/ server/src/
 COPY server/tsconfig.json server/
 COPY server/migrations/ server/migrations/
@@ -53,11 +50,10 @@ COPY packages/shared/src/ packages/shared/src/
 COPY packages/shared/tsconfig.json packages/shared/
 
 # Build the shared package first
-# pnpm workspace: devDependencies not hoisted by default, so use npx to resolve tsc
-RUN cd packages/shared && npx tsc
+RUN pnpm --filter @schemory/shared build
 
 # Build the dashboard (TypeScript + Vite build)
-RUN cd dashboard && npx tsc && npx vite build
+RUN pnpm --filter @schemory/dashboard build
 
 # =============================================================================
 # Stage 2: Final production image - minimal nginx to serve static files

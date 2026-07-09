@@ -33,7 +33,7 @@ COPY cli/package.json cli/
 COPY server/package.json server/
 
 # Install all dependencies (including dev dependencies for build)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --shamefully-hoist
 
 # Copy source files
 COPY dashboard/src/ dashboard/src/

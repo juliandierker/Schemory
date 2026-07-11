@@ -10,7 +10,6 @@ import {
   getUserByEmail,
   setUserPassword,
   loginWithPassword,
-  resendActivationEmail,
   hashToken,
   ACTIVATION_TOKEN_EXPIRY_HOURS,
 } from '../repos/auth.js';
@@ -401,45 +400,32 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
-      // Resend activation email
-      const result = await resendActivationEmail(email);
+      // Get user - must exist
+      const user = await getUserByEmail(email);
       
-      if (!result) {
-        // User doesn't exist or is already activated
-        // For resignup to work, we need to send an email for existing users
-        // Check if user exists
-        const user = await getUserByEmail(email);
-        
-        if (!user) {
-          // Don't reveal whether user exists for security
-          return reply.status(200).send({
-            status: 'sent',
-            message: 'If an account exists with this email, a new activation email has been sent',
-          });
-        }
-        
-        // User exists - send activation email even if already active
-        const activationToken = 'act_' + crypto.randomBytes(16).toString('hex');
-        const tokenHash = await hashToken(activationToken);
-        const expiresAt = new Date(Date.now() + ACTIVATION_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
-        
-        // Invalidate old tokens and store new one
-        await query(`DELETE FROM activation_tokens WHERE user_id = $1`, [user.id]);
-        await query(
-          `INSERT INTO activation_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)`,
-          [user.id, tokenHash, expiresAt.toISOString()]
-        );
-        
-        await getEmailService().sendActivationEmail(email, activationToken);
-        
-        return reply.status(200).send({
-          status: 'sent',
-          message: 'Activation email resent',
+      if (!user) {
+        return reply.status(404).send({
+          error: {
+            code: 'USER_NOT_FOUND',
+            message: 'User not found',
+          },
         });
       }
       
-      // User exists and is inactive - use existing activation token flow
-      await getEmailService().sendActivationEmail(email, result.activationToken);
+      // Generate new activation token (same pattern as signup)
+      const activationToken = 'act_' + crypto.randomBytes(32).toString('base64url');
+      const tokenHash = await hashToken(activationToken);
+      const expiresAt = new Date(Date.now() + ACTIVATION_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
+      
+      // Invalidate old tokens and store new one
+      await query(`DELETE FROM activation_tokens WHERE user_id = $1`, [user.id]);
+      await query(
+        `INSERT INTO activation_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)`,
+        [user.id, tokenHash, expiresAt.toISOString()]
+      );
+      
+      // Send activation email (same pattern as signup)
+      await getEmailService().sendActivationEmail(email, activationToken);
 
       return reply.status(200).send({
         status: 'sent',

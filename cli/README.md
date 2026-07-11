@@ -26,10 +26,12 @@ schemory signup your@email.com
 
 2. **Activate** - Click the activation link sent to your email
 
-3. **Login** - Authenticate with your access token
+3. **Login** - Authenticate with your email and password
 ```bash
-schemory login sk_your_access_token
+schemory login your@email.com
 ```
+
+You will be prompted for your password.
 
 4. **Join** - Join a team
 ```bash

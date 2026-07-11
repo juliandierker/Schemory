@@ -127,7 +127,7 @@ All responses are JSON. All authenticated routes require `Authorization: Bearer 
 |--------|------|------|---------|----------|--------------|
 | POST | `/api/users/signup` | None | `{ email: string }` | `{ status: "pending", message: "Activation email sent" }` | 202, 400, 409 |
 | POST | `/api/users/activate` | None | `{ token: string }` | `{ user: User, accessToken: string, expiresAt: string }` | 200, 400, 404, 409 |
-| POST | `/api/auth/verify` | Bearer | — | `{ user: User, teams: Team[] }` | 200, 401 |
+| POST | `/auth/login` | None | `{ email: string, password: string }` | `{ user: User, teams: Team[], accessToken: string, expiresAt: string }` | 200, 400, 401 |
 
 ### Team Routes
 
@@ -199,25 +199,58 @@ Activates account using one-time token from email. Returns access token for CLI.
 
 ---
 
-#### POST /api/auth/verify
-Verifies CLI access token is valid. Used by `npx schemory login <token>`.
+#### POST /auth/login
+Authenticates a user with email and password, returns access token. Used by `npx schemory login <email>`.
 
-**Headers:**
-```
-Authorization: Bearer sk_live_...
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "yourpassword"
+}
 ```
 
 **Response (200):**
 ```json
 {
   "user": { "id": "usr_...", "email": "...", ... },
-  "teams": [{ "id": "tm_...", "name": "...", ... }]
+  "teams": [],
+  "accessToken": "sk_live_...",
+  "expiresAt": "2025-..."
 }
 ```
 
 **Errors:**
+- 400: Missing email or password
+- 401: Invalid email or password
+
+---
+
+#### POST /auth/login/token
+Verifies access token and returns user info. Used by the dashboard for token-based authentication.
+
+**Request Body:**
+```json
+{
+  "token": "sk_live_..."
+}
+```
+
+**Response (200):**
+```json
+{
+  "user": { "id": "usr_...", "email": "...", ... },
+  "teams": [],
+  "accessToken": "sk_live_...",
+  "expiresAt": "2025-..."
+}
+```
+
+**Errors:**
+- 400: Missing token
 - 401: Invalid or revoked token
 
+---
 ---
 
 #### POST /api/teams/:teamName/join

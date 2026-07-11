@@ -68,8 +68,8 @@ export default function Dashboard() {
               <span className="text-text text-opacity-70 flex-1">Activate your account with the token from the email</span>
             </div>
             <div className="flex flex-col md:flex-row gap-4 py-3 border-b border-border last:border-0">
-              <code className="font-mono text-primary whitespace-nowrap">npx schemory login &lt;token&gt;</code>
-              <span className="text-text text-opacity-70 flex-1">Authenticate the CLI with your access token</span>
+              <code className="font-mono text-primary whitespace-nowrap">npx schemory login &lt;email&gt;</code>
+              <span className="text-text text-opacity-70 flex-1">Authenticate the CLI with your email and password</span>
             </div>
             <div className="flex flex-col md:flex-row gap-4 py-3 border-b border-border last:border-0">
               <code className="font-mono text-primary whitespace-nowrap">npx schemory join &lt;team&gt;</code>

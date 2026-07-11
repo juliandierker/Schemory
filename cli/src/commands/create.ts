@@ -21,7 +21,7 @@ export function createCreateCommand(): Command {
       const token = config.auth?.token;
 
       if (!token) {
-        console.error('Error: You must be logged in to create a team. Please run `schemory login <token>` first.');
+        console.error('Error: You must be logged in to create a team. Please run `schemory login <email>` first.');
         process.exit(1);
       }
 

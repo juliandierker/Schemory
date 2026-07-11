@@ -23,7 +23,7 @@ export function createPullCommand(): Command {
       const teams = config.teams || [];
 
       if (!token) {
-        console.error('Error: You must be logged in to pull items. Please run `schemory login <token>` first.');
+        console.error('Error: You must be logged in to pull items. Please run `schemory login <email>` first.');
         process.exit(1);
       }
 

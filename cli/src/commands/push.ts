@@ -25,7 +25,7 @@ export function createPushCommand(): Command {
       const teams = config.teams || [];
 
       if (!token) {
-        console.error('Error: You must be logged in to push items. Please run `schemory login <token>` first.');
+        console.error('Error: You must be logged in to push items. Please run `schemory login <email>` first.');
         process.exit(1);
       }
 

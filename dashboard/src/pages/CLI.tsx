@@ -77,17 +77,16 @@ export default function CLI() {
         
         <div className="bg-surface-elevated rounded-lg p-6 mb-6">
           <p className="text-text mb-4">
-            Authenticate your CLI with your personal access token. This token is unique to your account and should be kept secret.
+            Authenticate your CLI with your email and password.
           </p>
           
           <CLICommand
-            command={`npx schemory login ${token}`}
-            description="Authenticate with your Schemory account using your personal access token."
+            command={`npx schemory login ${user?.email || '<email>'}`}
+            description="Authenticate with your Schemory account using your email address."
           />
           
           <p className="text-text-secondary text-sm">
-            <strong className="text-text">Note:</strong> Replace the token above with your actual access token if not auto-filled.
-            Your token is stored securely and is only visible to you.
+            <strong className="text-text">Note:</strong> You will be prompted for your password after entering your email.
           </p>
         </div>
       </section>
@@ -117,8 +116,8 @@ export default function CLI() {
 
           {/* Login Command */}
           <CLICommand
-            command={`npx schemory login ${token}`}
-            description="Authenticate with your access token. Once logged in, you can use file operations."
+            command={`npx schemory login <email>`}
+            description="Authenticate with your email and password. Once logged in, you can use file operations."
           />
 
           {/* Logout Command */}
@@ -199,8 +198,8 @@ mkdir my-schemory-project
 cd my-schemory-project
 npm init -y
 
-# Authenticate with your token
-npx schemory login ${token}
+# Authenticate with your email (you'll be prompted for password)
+npx schemory login ${user?.email || '<your-email>'}
 
 # Check if authentication worked
 npx schemory pull
@@ -236,8 +235,8 @@ npx schemory signup developer@example.com
 # 2. Activate (check your email for the activation token)
 npx schemory activate act_token_from_email
 
-# 3. Login with your new token
-npx schemory login ${token}
+# 3. Login with your email (you'll be prompted for password)
+npx schemory login developer@example.com
 
 # 4. Create a team
 npx schemory create AcmeTeam
@@ -265,8 +264,7 @@ npx schemory logout`}
           </div>
 
           <p className="text-text-secondary text-sm mt-6">
-            <strong className="text-primary">Important:</strong> Your access token ({token.slice(0, 8)}...) 
-            is your password to the Schemory CLI. Never share it or commit it to version control.
+            <strong className="text-primary">Important:</strong> Your password is required for CLI login. Never share your password or access token, and never commit authentication credentials to version control.
           </p>
         </div>
       </section>

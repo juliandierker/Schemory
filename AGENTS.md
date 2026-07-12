@@ -17,6 +17,7 @@ Stack preference: European or open source only.
 |------|---------|----------|--------|
 | 1 | `npx schemory signup <email>` | — | sends confirmation email with activation token |
 | 1b | `npx schemory resignup <email>` | — | resends activation email for existing account |
+| 1c | `npx schemory resend-activation <email>` | — | server endpoint: resends activation email for existing account |
 | 2 | `npx schemory activate <act_...>` | step 1 | activates account, prompts to set password, and authenticates CLI |
 | 3 | `npx schemory login <email>` | registered account | prompts for password, authenticates CLI, displays welcome message with icon, and shows status |
 | 3b | `npx schemory logout` | logged in | clears authentication token, logs out of current session |
@@ -62,3 +63,58 @@ Steps 1–2 are one-time setup. Step 3 is for authentication (including logout).
 | Simplicity first | No abstraction unless it removes real duplication |
 | Surgical changes | Only touch files/lines required for the task |
 | Goal-driven execution | Write a test or success criterion before implementing |
+
+---
+
+## Infrastructure & Operations
+
+### Local Development Setup
+
+**Server Development**:
+- Server source files use `.js` import extensions for compatibility with compiled output
+- Development workflow: `pnpm build` + `node dist/index.js` (updated dev script)
+- Server requires PostgreSQL connection and runs on port 3000 by default
+- Environment variables: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `ACTIVATION_BASE_URL`, `RESEND_API_KEY`
+
+**CLI Configuration**:
+- CLI defaults to `https://api.schemory.org` in production mode, `http://localhost:3000` in development
+- Use `NODE_ENV=development` and `SCHEMORY_API_URL=http://localhost:3000` for local testing
+- Password prompts use raw mode and may not work in non-interactive shells
+
+### Email Delivery
+- **Development**: Emails are logged to console with full activation links (convenience for local testing)
+- **Production**: Uses Resend API via `RESEND_API_KEY` environment variable
+- **Test**: Uses stub implementation that captures tokens for test verification
+- Activation links point to `ACTIVATION_BASE_URL` (default: dashboard URL + `/activate`)
+
+### Database Configuration
+- **Default connection**: PostgreSQL on localhost:5432 with user `postgres`/`postgres`
+- **Local testing**: Create `schemory` database: `CREATE DATABASE schemory;`
+- **Migrations**: Run `npx node-pg-migrate up -m ./migrations` from server directory
+- **Docker**: PostgreSQL 16 Alpine image with health checks
+
+### Production Deployment
+- **Server**: Uses compiled TypeScript files from `dist/` directory
+- **Docker**: Multi-stage build with builder (dev deps) and final (production only) stages
+- **Health check**: `GET /health` endpoint returns `{"status": "ok"}`
+- **CORS**: Configured for localhost:5173, schemory.org, and wildcards
+
+### Known Issues & Workarounds
+
+1. **CLI Password Prompts**: Don't work in non-interactive shells. Workaround: Use API directly for testing.
+2. **TypeScript Imports**: Source files use `.js` extensions for compatibility with compiled output.
+3. **Development Script**: Updated from `tsx src/index.ts` to `tsc && node dist/index.js` for reliability.
+4. **Database Role**: Some systems may not have `postgres` role. Use existing role (e.g., current user).
+
+### Testing Checklist
+
+- [ ] Database connection (`psql -h localhost -p 5432 -U user -d schemory`)
+- [ ] Database migrations (`npx node-pg-migrate up`)
+- [ ] Server health (`curl http://localhost:3000/health`)
+- [ ] Signup flow (`POST /auth/signup`)
+- [ ] Activation flow (`POST /auth/activate`)
+- [ ] Login flow (`POST /auth/login`)
+- [ ] Team creation (`POST /api/teams`)
+- [ ] Item push/pull (`PUT /api/items/:name`, `GET /api/items`)
+- [ ] Email logging in dev mode
+- [ ] Resend integration in production (requires `RESEND_API_KEY`)

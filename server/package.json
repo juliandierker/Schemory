@@ -10,7 +10,7 @@
     "test:db": "tsx test/db.test.js",
     "migrate": "tsx -e \"import('node-pg-migrate').then(m => m.runner({databaseUrl: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/schemory', dir: 'migrations', direction: 'up'}))\"",
     "lint": "echo \"server: lint pass\"",
-    "dev": "tsx src/index.ts"
+    "dev": "tsc && node dist/index.js"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",

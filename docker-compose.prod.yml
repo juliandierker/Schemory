@@ -1,100 +1,103 @@
-version: '3.8'
-
-# Production compose file
-# Usage: docker compose -f docker-compose.prod.yml up
-# 
-# Expected environment variables (from .env file or environment):
-# - DATABASE_URL: PostgreSQL connection string (e.g., postgres://user:pass@host:port/db)
-#   OR individual vars: DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
-# - RESEND_API_KEY: Resend API key for sending emails
-# - EMAIL_FROM_ADDRESS: Email address for sending activation emails
-# - APP_BASE_URL: Base URL for the application (e.g., https://schemory.app)
-# - ACTIVATION_BASE_URL: Base URL for activation links (e.g., https://schemory.app/activate)
-# - VITE_API_URL: API base URL for dashboard (e.g., http://server:3000 for Docker internal)
-# - NODE_ENV: Set to "production"
-# - PORT: Server port (default: 3000)
-# - SERVER_PORT: Server port (default: 3000)
-# - DASHBOARD_PORT: Dashboard port (default: 80)
+version: "3.8"
 
 services:
-  # PostgreSQL database (recommended for production to use external managed DB)
-  # Uncomment if using Docker-based Postgres for production
-  postgres:
-    image: postgres:16-alpine
-    container_name: schemory-postgres-prod
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-schemory}
-    volumes:
-      - postgres_data_prod:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    # PostgreSQL - Primary database
+    postgres:
+        image: postgres:16-alpine
+        container_name: schemory-postgres-prod
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER:-postgres}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+            POSTGRES_DB: ${POSTGRES_DB:-schemory}
+            PGDATA: /var/lib/postgresql/data
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+            start_period: 10s
+        restart: unless-stopped
+        networks:
+            - schemory-network
 
-  # Server - Fastify API (production)
-  server:
-    build:
-      context: .
-      dockerfile: server/Dockerfile
-      # No target specified - uses final stage (production)
-    container_name: schemory-server-prod
-    environment:
-      NODE_ENV: production
-      PORT: ${SERVER_PORT:-3000}
-      # Database configuration - can use DATABASE_URL or individual vars
-      DATABASE_URL: ${DATABASE_URL:-}
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: ${DB_NAME:-schemory}
-      ACTIVATION_BASE_URL: ${ACTIVATION_BASE_URL:-https://schemory.org/activate}
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
-      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-}
-      APP_BASE_URL: ${APP_BASE_URL:-}
-    ports:
-      - "${SERVER_PORT:-3000}:${SERVER_PORT:-3000}"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:${SERVER_PORT:-3000}/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    depends_on:
-      postgres:
-        condition: service_healthy
-    # Migrations are run automatically as part of the CMD in the Dockerfile
-    # The run-migrations.js script includes retry logic for when postgres is starting up
+    # Server - Fastify API
+    server:
+        build:
+            context: .
+            dockerfile: server/Dockerfile
+        container_name: schemory-server-prod
+        environment:
+            NODE_ENV: production
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_USER: ${POSTGRES_USER:-postgres}
+            DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+            DB_NAME: ${POSTGRES_DB:-schemory}
+            ACTIVATION_BASE_URL: ${ACTIVATION_BASE_URL:-https://schemory.org/activate}
+            RESEND_API_KEY: ${RESEND_API_KEY:-}
+            EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-noreply@schemory.org}
+            PORT: ${SERVER_PORT:-3000}
+        depends_on:
+            postgres:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "wget", "-q", "--spider", "--tries=1", "--timeout=5", "http://localhost:3000/health"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 15s
+        restart: unless-stopped
+        networks:
+            - schemory-network
+        ports:
+            - "${SERVER_PORT:-3000}:3000"
 
-  # Dashboard - React + Vite static files served by nginx (production)
-  dashboard:
-    build:
-      context: .
-      dockerfile: dashboard/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-}
-    container_name: schemory-dashboard-prod
-    environment:
-      NODE_ENV: production
-    ports:
-      - "${DASHBOARD_PORT:-80}:80"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-    depends_on:
-      server:
-        condition: service_healthy
+    # Dashboard - React static files
+    dashboard:
+        build:
+            context: .
+            dockerfile: dashboard/Dockerfile
+        container_name: schemory-dashboard-prod
+        environment:
+            NODE_ENV: production
+        depends_on:
+            server:
+                condition: service_healthy
+        restart: unless-stopped
+        networks:
+            - schemory-network
+        ports:
+            - "${DASHBOARD_PORT:-80}:80"
+
+    # Caddy - Reverse Proxy with SSL
+    caddy:
+        image: caddy:2-alpine
+        container_name: schemory-caddy-prod
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile
+            - caddy_data:/data
+            - caddy_config:/config
+        depends_on:
+            server:
+                condition: service_healthy
+            dashboard:
+                condition: service_started
+        restart: unless-stopped
+        networks:
+            - schemory-network
+
+networks:
+    schemory-network:
+        driver: bridge
 
 volumes:
-  postgres_data_prod:
+    postgres_data:
+    caddy_data:
+    caddy_config:

@@ -1,0 +1,7 @@
+schemory.org {
+    reverse_proxy dashboard:80
+}
+
+api.schemory.org {
+    reverse_proxy server:3000
+}

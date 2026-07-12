@@ -118,3 +118,185 @@ Steps 1–2 are one-time setup. Step 3 is for authentication (including logout).
 - [ ] Item push/pull (`PUT /api/items/:name`, `GET /api/items`)
 - [ ] Email logging in dev mode
 - [ ] Resend integration in production (requires `RESEND_API_KEY`)
+
+---
+
+## Production Deployment (Fixed)
+
+### 🚀 Robust Docker Production Setup
+
+**IMPORTANT**: The production setup has been completely redesigned for reliability. All services now run in a single Docker Compose network with proper dependencies and health checks.
+
+#### Updated Architecture:
+- **postgres**: PostgreSQL database with health checks (10 retries, 10s start period)
+- **server**: Fastify API with database connectivity health check
+- **dashboard**: React static files, depends on server being healthy
+- **caddy**: Reverse proxy with automatic SSL (Let's Encrypt), integrated into Docker Compose
+- **All services** on the same `schemory-network` for reliable DNS resolution
+
+#### Files Added/Updated:
+- `docker-compose.prod.yml` - Complete production compose with all 4 services
+- `Caddyfile` - Reverse proxy configuration for schemory.org and api.schemory.org
+- `server/src/index.ts` - Health endpoint now checks database connectivity
+- `server/run-migrations.js` - Enhanced error logging and connection string building
+
+### Production Configuration Files
+
+#### 1. `.env` (Required for Production)
+```bash
+# Application
+NODE_ENV=production
+SERVER_PORT=3000
+DASHBOARD_PORT=80
+
+# Database - MUST match docker-compose.prod.yml
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=schemory
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=schemory
+
+# Email (for production)
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM_ADDRESS=noreply@schemory.org
+ACTIVATION_BASE_URL=https://schemory.org/activate
+
+# Dashboard API URL (Docker internal)
+VITE_API_URL=http://server:3000
+```
+
+#### 2. `Caddyfile` (Required)
+```caddy
+schemory.org {
+    reverse_proxy dashboard:80
+}
+
+api.schemory.org {
+    reverse_proxy server:3000
+}
+```
+
+### Production Deployment Commands
+
+#### First-time deployment:
+```bash
+# 1. Create .env file with your configuration
+cp .env.example .env
+# Edit .env with your production values
+
+# 2. Build all images
+docker compose -f docker-compose.prod.yml build
+
+# 3. Start all services (creates volumes, networks, containers)
+docker compose -f docker-compose.prod.yml up -d
+
+# 4. Monitor startup
+docker compose -f docker-compose.prod.yml logs -f
+```
+
+#### Updating to new version:
+```bash
+# 1. Pull latest changes
+git pull
+
+# 2. Rebuild and restart
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml build --no-cache
+docker compose -f docker-compose.prod.yml up -d
+
+# 3. Verify
+docker compose -f docker-compose.prod.yml ps
+curl -k https://schemory.org
+curl -k https://api.schemory.org/health
+```
+
+#### Debugging production issues:
+```bash
+# Check all containers
+olver compose -f docker-compose.prod.yml ps
+
+# View logs for specific service
+docker compose -f docker-compose.prod.yml logs server
+
+# Test database from server container
+docker exec schemory-server-prod node -e "
+const { query } = require('./dist/db.js');
+query('SELECT 1').then(() => console.log('DB OK')).catch(e => console.error('DB ERROR:', e.message));
+"
+
+# Enter server container for debugging
+docker exec -it schemory-server-prod sh
+
+# Check environment variables
+docker exec schemory-server-prod env | grep -E "DB_|POSTGRES_"
+```
+
+### Production Troubleshooting Guide
+
+| Symptom | Root Cause | Solution |
+|---------|------------|----------|
+| All APIs return 500 | DB connection failed | Check `docker exec schemory-server-prod env \| grep DB_` |
+| Server "Waiting" state | PostgreSQL not healthy | `docker logs schemory-postgres-prod` |
+| Dashboard 502 | Caddy can't reach dashboard | Check Caddyfile, use `dashboard:80` not `localhost` |
+| Migrations fail | Wrong DB credentials in run-migrations.js | Use `DB_USER`/`DB_PASSWORD` env vars |
+| Port 80 in use | External web server running | Stop Apache/Nginx: `sudo systemctl stop apache2 nginx` |
+| PostgreSQL auth fails | Volume has old credentials | `docker volume rm schemory_postgres_data; docker compose up -d` |
+
+### Health Check Endpoints
+
+| Endpoint | Checks | Expected Response |
+|----------|--------|------------------|
+| `GET /health` | Server + Database | `{ status: "ok", database: "connected" }` |
+| `GET /` | Dashboard | HTML page |
+| `https://schemory.org` | Full stack | Dashboard via Caddy |
+| `https://api.schemory.org/health` | Full stack | `{ status: "ok", database: "connected" }` |
+
+### Database Connection Verification
+
+The production health endpoint now **verifies database connectivity**. This catches connection issues early:
+
+```bash
+# Test health endpoint (should include database status)
+curl http://localhost:3000/health
+# OR via Caddy
+curl -k https://api.schemory.org/health
+```
+
+**✅ Healthy:** `{ "status": "ok", "database": "connected" }`
+**❌ Unhealthy:** `{ "status": "error", "database": "disconnected", "error": "..." }`
+
+### Migration Reliability
+
+The migration script (`server/run-migrations.js`) has been enhanced with:
+- Explicit connection string building from multiple env var sources
+- Better error logging with `[MIGRATIONS]` prefix
+- Progress reporting for each attempt
+- Automatic retry on failure (30 attempts, 2s delay)
+
+To manually run migrations:
+```bash
+docker exec schemory-server-prod node /app/run-migrations.js
+```
+
+### Network Architecture
+
+All production services are on the **`schemory-network`** bridge network:
+- `postgres` → PostgreSQL database (port 5432)
+- `server` → Fastify API (port 3000)
+- `dashboard` → React static files (port 80)
+- `caddy` → Reverse proxy (ports 80, 443)
+
+Services can resolve each other by **service name** (e.g., `postgres:5432`, `server:3000`).
+
+### Caddy SSL Configuration
+
+Caddy automatically:
+- Obtains Let's Encrypt certificates for your domains
+- Renews certificates automatically
+- Proxies to the correct internal services
+- Handles HTTP → HTTPS redirects
+
+Caddy is now **integrated into Docker Compose** (not standalone), ensuring it starts after the server and dashboard are ready.

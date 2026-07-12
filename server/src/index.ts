@@ -23,9 +23,22 @@ void server.register(authRoutes);
 void server.register(teamRoutes);
 void server.register(itemRoutes);
 
-// Health check
+// Health check - verifies both server and database connectivity
 server.get("/health", async () => {
-  return { status: "ok" };
+  try {
+    // Check database connection
+    const { query } = await import('./db.js');
+    await query('SELECT 1');
+    return { status: "ok", database: "connected" };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Health check database error:', errorMessage);
+    return {
+      status: "error",
+      database: "disconnected",
+      error: errorMessage
+    };
+  }
 });
 
 // Start server

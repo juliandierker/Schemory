@@ -3,7 +3,8 @@
 | Script | Purpose | Usage |
 |--------|---------|-------|
 | `dev-up.sh` | Local hot-reload stack (`schemory-dev`) | `./scripts/dev-up.sh` |
-| `deploy-prod.sh` | Production deploy (`schemory-prod`) | `./scripts/deploy-prod.sh` |
+| `deploy-prod.sh` | Full production deploy (`schemory-prod`) | `./scripts/deploy-prod.sh` |
+| `deploy-dashboard-prod.sh` | Rebuild/restart **dashboard only** | `./scripts/deploy-dashboard-prod.sh` |
 | `health-check.sh` | Verify **prod** stack only | `./scripts/health-check.sh` |
 | `update-prod.sh` | `deploy-prod.sh --pull` | `./scripts/update-prod.sh` |
 | `rollback-prod.sh` | Checkout commit + redeploy | `./scripts/rollback-prod.sh <commit>` |
@@ -41,6 +42,9 @@ cp .env.production.example .env.production
 ./scripts/deploy-prod.sh --no-cache
 ./scripts/deploy-prod.sh --skip-build
 ./scripts/deploy-prod.sh --wipe-data   # DESTROYS postgres volume (type DELETE)
+
+# UI-only (Create Team fix, styling, etc.) — leaves API/DB running
+./scripts/deploy-dashboard-prod.sh --pull --no-cache
 ```
 
 **Volumes are preserved by default.** Never use `docker compose down -v` on production unless you intend to wipe the database.

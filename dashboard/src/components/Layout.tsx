@@ -3,15 +3,14 @@ import { useLocation } from 'react-router-dom';
 import Headerbar from './Headerbar';
 import Sidebar from './Sidebar';
 import { MenuIcon, CloseIcon } from './icons';
-import { CreateActionsContext } from '../context/CreateActionsContext';
 
 interface LayoutProps {
   children: ReactNode;
-  onCreateTeam?: () => void;
-  onCreateFile?: () => void;
 }
 
-export default function Layout({ children, onCreateTeam, onCreateFile }: LayoutProps) {
+// Do not wrap CreateActionsContext here — App owns the handlers.
+// A nested provider with undefined callbacks made Create Team/File dead.
+export default function Layout({ children }: LayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const location = useLocation();
@@ -20,10 +19,6 @@ export default function Layout({ children, onCreateTeam, onCreateFile }: LayoutP
   useEffect(() => {
     setIsMobileSidebarOpen(false);
   }, [location.pathname]);
-
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
 
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
@@ -34,10 +29,9 @@ export default function Layout({ children, onCreateTeam, onCreateFile }: LayoutP
   };
 
   return (
-    <CreateActionsContext.Provider value={{ onCreateTeam, onCreateFile }}>
-      <div className="min-h-screen bg-surface">
-        {/* Header */}
-        <Headerbar />
+    <div className="min-h-screen bg-surface">
+      {/* Header */}
+      <Headerbar />
 
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
@@ -46,8 +40,8 @@ export default function Layout({ children, onCreateTeam, onCreateFile }: LayoutP
 
       {/* Mobile Sidebar Overlay (full-screen modal) */}
       {isMobileSidebarOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40" 
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={closeMobileSidebar}
         />
       )}
@@ -66,7 +60,7 @@ export default function Layout({ children, onCreateTeam, onCreateFile }: LayoutP
       </div>
 
       {/* Main content area with padding for fixed header and sidebar */}
-      <main 
+      <main
         className={`pt-16 transition-all duration-300 ${isMobileSidebarOpen ? 'lg:ml-0' : ''} ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}
         style={{ minHeight: 'calc(100vh - 4rem)' }}
       >
@@ -81,6 +75,5 @@ export default function Layout({ children, onCreateTeam, onCreateFile }: LayoutP
         <MenuIcon />
       </button>
     </div>
-    </CreateActionsContext.Provider>
   );
 }

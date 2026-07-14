@@ -1,10 +1,13 @@
-version: '3.8'
+name: schemory-dev
 
-# Development compose file with hot reload
-# Usage: docker compose -f docker-compose.dev.yml up
+# Local development with hot reload.
+# Usage: ./scripts/dev-up.sh
+#        OR: docker compose -f docker-compose.dev.yml up
+#
+# Isolated from production: different project name, volumes, containers, network.
+# Never points at api.schemory.org / production DB.
 
 services:
-  # PostgreSQL database
   postgres:
     image: postgres:16-alpine
     container_name: schemory-postgres-dev
@@ -12,28 +15,31 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: schemory
+      SCHEMORY_ENV: development
     ports:
       - "5432:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d schemory"]
       interval: 5s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - schemory-dev-net
 
-  # Server - Fastify API with hot reload
   server:
     build:
       context: .
       dockerfile: server/Dockerfile
-      target: builder  # Use builder stage for dev (has all deps including dev deps)
+      target: builder
     container_name: schemory-server-dev
     command: sh -c "pnpm --filter @schemory/shared build && pnpm --filter @schemory/server install && sleep 3 && DATABASE_URL=postgres://postgres:postgres@postgres:5432/schemory npx node-pg-migrate up -m /app/server/migrations && pnpm --filter @schemory/server dev"
     working_dir: /app
     environment:
       NODE_ENV: development
+      SCHEMORY_ENV: development
       PORT: 3000
       DB_HOST: postgres
       DB_PORT: 5432
@@ -43,7 +49,6 @@ services:
       ACTIVATION_BASE_URL: http://localhost:5173/activate
       RESEND_API_KEY: re_test_key
     volumes:
-      # Mount source for hot reload
       - ./server/src:/app/server/src:ro,delegated
       - ./server/package.json:/app/server/package.json:ro
       - ./server/tsconfig.json:/app/server/tsconfig.json:ro
@@ -52,7 +57,6 @@ services:
       - ./packages/shared/tsconfig.json:/app/packages/shared/tsconfig.json:ro
       - ./package.json:/app/package.json:ro
       - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
-      # Persist node_modules for faster rebuilds
       - server_node_modules:/app/node_modules
       - server_dist:/app/server/dist
       - shared_dist:/app/packages/shared/dist
@@ -61,27 +65,24 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # For hot reload, we use nodemon/tsx watch which is already in dev script
-    # The dev script in server/package.json is: "dev": "tsx src/index.ts"
-    # tsx has built-in watch mode
+    networks:
+      - schemory-dev-net
 
-  # Dashboard - React + Vite with hot reload
   dashboard:
     build:
       context: .
       dockerfile: dashboard/Dockerfile
-      target: builder  # Use builder stage for dev (has all deps including vite)
+      target: builder
     container_name: schemory-dashboard-dev
-    command: sh -c "pnpm --filter @schemory/shared build && pnpm --filter @schemory/dashboard dev"
+    command: sh -c "pnpm --filter @schemory/shared build && pnpm --filter @schemory/dashboard dev -- --host 0.0.0.0 --port 5173"
     working_dir: /app
     environment:
       NODE_ENV: development
-      # Dashboard dev server runs on port 5173 (Vite default)
+      SCHEMORY_ENV: development
       PORT: 5173
-      # API base URL for dashboard to connect to server
-      VITE_API_BASE_URL: http://localhost:3000
+      # Must match dashboard code (import.meta.env.VITE_API_URL)
+      VITE_API_URL: http://localhost:3000
     volumes:
-      # Mount source for hot reload
       - ./dashboard/src:/app/dashboard/src:ro,delegated
       - ./dashboard/index.html:/app/dashboard/index.html:ro
       - ./dashboard/vite.config.ts:/app/dashboard/vite.config.ts:ro
@@ -94,17 +95,28 @@ services:
       - ./packages/shared/tsconfig.json:/app/packages/shared/tsconfig.json:ro
       - ./package.json:/app/package.json:ro
       - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
-      # Persist node_modules and build cache
       - dashboard_node_modules:/app/node_modules
       - dashboard_dist:/app/dashboard/dist
     ports:
       - "5173:5173"
-    # Dashboard doesn't depend on server, but server needs to be running for API calls
+    networks:
+      - schemory-dev-net
+
+networks:
+  schemory-dev-net:
+    name: schemory_dev_net
+    driver: bridge
 
 volumes:
   postgres_data_dev:
+    name: schemory_dev_postgres_data
   server_node_modules:
+    name: schemory_dev_server_node_modules
   server_dist:
+    name: schemory_dev_server_dist
   shared_dist:
+    name: schemory_dev_shared_dist
   dashboard_node_modules:
+    name: schemory_dev_dashboard_node_modules
   dashboard_dist:
+    name: schemory_dev_dashboard_dist

@@ -35,7 +35,8 @@ export function getPool(config?: DbConfig): Pool {
       // Connection pool settings
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      // 5s gives Postgres time to accept connections after restart / failover
+      connectionTimeoutMillis: 5000,
     } as PoolConfig);
 
     // Log pool errors

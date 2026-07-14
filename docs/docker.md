@@ -4,11 +4,15 @@ This document describes the Docker setup for Schemory, including development and
 
 ## Overview
 
-Schemory uses Docker for both local development and production deployment. The setup includes:
+Schemory uses **separate Compose projects** for local and production so volumes, networks, and env files never collide.
 
-- **server**: Fastify API server (Node.js)
-- **dashboard**: React + Vite frontend
-- **postgres**: PostgreSQL database (development only; production uses external)
+| Stack | Compose file | Project name | Env file |
+|-------|--------------|--------------|----------|
+| Local hot-reload | `docker-compose.dev.yml` | `schemory-dev` | `.env.development` |
+| Local lightweight | `docker-compose.yml` | `schemory-local` | (hardcoded / `.env.development`) |
+| Production VPS | `docker-compose.prod.yml` | `schemory-prod` | `.env.production` |
+
+Services: **server** (Fastify), **dashboard** (Vite/nginx), **postgres**, plus **caddy** in production only.
 
 ## Architecture Decisions
 
@@ -35,16 +39,13 @@ The production compose file **expects an externally-managed PostgreSQL instance*
 ### Local Development
 
 ```bash
-# Start all services with hot reload
+# Preferred
+./scripts/dev-up.sh
+
+# Equivalent
 docker compose -f docker-compose.dev.yml up
 
-# Or in detached mode
-docker compose -f docker-compose.dev.yml up -d
-
-# Stop services
 docker compose -f docker-compose.dev.yml down
-
-# View logs
 docker compose -f docker-compose.dev.yml logs -f
 ```
 
@@ -55,32 +56,17 @@ docker compose -f docker-compose.dev.yml logs -f
 
 **Hot reload:** Edit any source file in `server/src/` or `dashboard/src/` on your host machine, and changes will be reflected in the running containers without a rebuild.
 
-### Production Deployment
+### Production Deployment (VPS only)
 
 ```bash
-# Build production images
-docker compose -f docker-compose.prod.yml build
+cp .env.production.example .env.production
+# edit secrets — VITE_API_URL=https://api.schemory.org
 
-# Start production stack (with environment variables from .env file)
-docker compose -f docker-compose.prod.yml up -d
-
-# Stop production stack
-docker compose -f docker-compose.prod.yml down
-
-# View logs
-docker compose -f docker-compose.prod.yml logs -f
+./scripts/deploy-prod.sh
+./scripts/health-check.sh
 ```
 
-**Required environment variables:**
-Create a `.env` file based on `.env.example` with at least these variables:
-- `DATABASE_URL` or (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`)
-- `RESEND_API_KEY` (for email activation)
-- `EMAIL_FROM_ADDRESS`
-- `ACTIVATION_BASE_URL`
-
-**Services available:**
-- Server: http://localhost:3000 (or custom port via `SERVER_PORT`)
-- Dashboard: http://localhost:80 (or custom port via `DASHBOARD_PORT`)
+Only Caddy publishes host ports 80/443. Do not use `docker-compose.prod.yml` for laptop day-to-day work.
 
 ## Dockerfiles
 

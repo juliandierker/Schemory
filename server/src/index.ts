@@ -23,21 +23,21 @@ void server.register(authRoutes);
 void server.register(teamRoutes);
 void server.register(itemRoutes);
 
-// Health check - verifies both server and database connectivity
-server.get("/health", async () => {
+// Health check - verifies both server and database connectivity.
+// Returns HTTP 503 when DB is down so Docker/Caddy treat the service as unhealthy.
+server.get("/health", async (_request, reply) => {
   try {
-    // Check database connection
-    const { query } = await import('./db.js');
-    await query('SELECT 1');
+    const { query } = await import("./db.js");
+    await query("SELECT 1");
     return { status: "ok", database: "connected" };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Health check database error:', errorMessage);
-    return {
+    console.error("Health check database error:", errorMessage);
+    return reply.code(503).send({
       status: "error",
       database: "disconnected",
-      error: errorMessage
-    };
+      error: errorMessage,
+    });
   }
 });
 

@@ -61,9 +61,10 @@ USER nodejs
 # Copy all production dependencies from builder (with --shamefully-hoist, they're in root node_modules)
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules/ /app/node_modules/
 
-# Copy built @schemory/shared package to node_modules
-RUN mkdir -p /app/node_modules/@schemory
-COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist /app/node_modules/@schemory/shared
+# Install @schemory/shared as a real package (package.json main → dist/index.js)
+RUN mkdir -p /app/node_modules/@schemory/shared
+COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/package.json /app/node_modules/@schemory/shared/package.json
+COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist/ /app/node_modules/@schemory/shared/dist/
 
 # Copy built files from builder
 COPY --from=builder --chown=nodejs:nodejs /app/server/dist/ ./server/dist/
@@ -75,7 +76,7 @@ COPY --chown=nodejs:nodejs server/package.json ./server/package.json
 COPY --chown=nodejs:nodejs packages/shared/package.json ./packages/shared/package.json
 
 # Copy migration runner script
-COPY server/run-migrations.js /app/run-migrations.js
+COPY --chown=nodejs:nodejs server/run-migrations.js /app/run-migrations.js
 
 # Environment variables
 ENV NODE_ENV=production
@@ -84,9 +85,9 @@ ENV PORT=3000
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (res) => { if (res.statusCode !== 200) process.exit(1); }).on('error', () => process.exit(1))" || exit 1
+# Health check (HTTP 200 only when DB is connected)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
+  CMD node -e "require('http').get('http://127.0.0.1:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1))"
 
 # Run migrations and start server
 CMD ["sh", "-c", "node /app/run-migrations.js && node /app/server/dist/index.js"]

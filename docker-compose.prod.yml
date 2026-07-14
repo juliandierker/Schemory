@@ -1,7 +1,10 @@
-version: "3.8"
+name: schemory-prod
+
+# Production stack — Hetzner VPS only.
+# Project name + explicit volume names keep this isolated from local/dev compose.
+# Do NOT run this on a laptop for day-to-day development (use docker-compose.dev.yml).
 
 services:
-    # PostgreSQL - Primary database
     postgres:
         image: postgres:16-alpine
         container_name: schemory-postgres-prod
@@ -9,22 +12,24 @@ services:
             POSTGRES_USER: ${POSTGRES_USER:-postgres}
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
             POSTGRES_DB: ${POSTGRES_DB:-schemory}
+            # Keep default PGDATA path so existing Hetzner volumes keep working
             PGDATA: /var/lib/postgresql/data
         volumes:
             - postgres_data:/var/lib/postgresql/data
-        ports:
-            - "5432:5432"
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-schemory}",
+                ]
             interval: 5s
             timeout: 5s
-            retries: 10
-            start_period: 10s
+            retries: 12
+            start_period: 20s
         restart: unless-stopped
         networks:
             - schemory-network
 
-    # Server - Fastify API
     server:
         build:
             context: .
@@ -32,6 +37,7 @@ services:
         container_name: schemory-server-prod
         environment:
             NODE_ENV: production
+            SCHEMORY_ENV: production
             DB_HOST: postgres
             DB_PORT: 5432
             DB_USER: ${POSTGRES_USER:-postgres}
@@ -40,40 +46,61 @@ services:
             ACTIVATION_BASE_URL: ${ACTIVATION_BASE_URL:-https://schemory.org/activate}
             RESEND_API_KEY: ${RESEND_API_KEY:-}
             EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-noreply@schemory.org}
-            PORT: ${SERVER_PORT:-3000}
+            PORT: 3000
         depends_on:
             postgres:
                 condition: service_healthy
         healthcheck:
-            test: ["CMD", "wget", "-q", "--spider", "--tries=1", "--timeout=5", "http://localhost:3000/health"]
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "-q",
+                    "--spider",
+                    "--tries=1",
+                    "--timeout=5",
+                    "http://127.0.0.1:3000/health",
+                ]
             interval: 10s
             timeout: 5s
-            retries: 5
-            start_period: 15s
+            retries: 12
+            start_period: 90s
         restart: unless-stopped
         networks:
             - schemory-network
-        ports:
-            - "${SERVER_PORT:-3000}:3000"
 
-    # Dashboard - React static files
     dashboard:
         build:
             context: .
             dockerfile: dashboard/Dockerfile
+            args:
+                # Browser-reachable API URL (NOT Docker-internal hostname)
+                VITE_API_URL: ${VITE_API_URL:-https://api.schemory.org}
         container_name: schemory-dashboard-prod
         environment:
-            NODE_ENV: production
+            SCHEMORY_ENV: production
         depends_on:
             server:
                 condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "-q",
+                    "--spider",
+                    "--tries=1",
+                    "--timeout=3",
+                    "http://127.0.0.1/health",
+                ]
+            interval: 15s
+            timeout: 3s
+            retries: 5
+            start_period: 10s
         restart: unless-stopped
         networks:
             - schemory-network
-        ports:
-            - "${DASHBOARD_PORT:-80}:80"
 
-    # Caddy - Reverse Proxy with SSL
     caddy:
         image: caddy:2-alpine
         container_name: schemory-caddy-prod
@@ -81,23 +108,28 @@ services:
             - "80:80"
             - "443:443"
         volumes:
-            - ./Caddyfile:/etc/caddy/Caddyfile
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
             - caddy_data:/data
             - caddy_config:/config
         depends_on:
             server:
                 condition: service_healthy
             dashboard:
-                condition: service_started
+                condition: service_healthy
         restart: unless-stopped
         networks:
             - schemory-network
 
 networks:
     schemory-network:
+        name: schemory_prod_net
         driver: bridge
 
 volumes:
+    # Explicit names preserve existing Hetzner volumes created under project "schemory"
     postgres_data:
+        name: schemory_postgres_data
     caddy_data:
+        name: schemory_caddy_data
     caddy_config:
+        name: schemory_caddy_config

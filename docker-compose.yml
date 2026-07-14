@@ -1,31 +1,40 @@
-version: '3.8'
+name: schemory-local
+
+# Lightweight local stack (API + Postgres + test DB). No Caddy / no prod TLS.
+# Prefer docker-compose.dev.yml for day-to-day hot-reload development.
+#
+# Isolated from production volumes/networks (project name schemory-local).
 
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: schemory-postgres
+    container_name: schemory-postgres-local
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: schemory
+      SCHEMORY_ENV: development
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d schemory"]
       interval: 5s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - schemory-local-net
 
   server:
     build:
       context: .
       dockerfile: server/Dockerfile
-    container_name: schemory-server
+    container_name: schemory-server-local
     environment:
       NODE_ENV: development
+      SCHEMORY_ENV: development
       PORT: 3000
       DB_HOST: postgres
       DB_PORT: 5432
@@ -41,11 +50,13 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - schemory-local-net
 
   postgres-test:
     image: postgres:16-alpine
@@ -54,14 +65,23 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: schemory_test
+      SCHEMORY_ENV: test
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d schemory_test"]
       interval: 5s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - schemory-local-net
+
+networks:
+  schemory-local-net:
+    name: schemory_local_net
+    driver: bridge
 
 volumes:
   postgres_data:
+    name: schemory_local_postgres_data

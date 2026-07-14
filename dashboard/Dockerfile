@@ -59,6 +59,9 @@ RUN pnpm --filter @schemory/dashboard build
 # =============================================================================
 FROM nginx:1.25-alpine
 
+# wget is required for compose/Dockerfile healthchecks
+RUN apk add --no-cache wget
+
 # Create non-root user (keep nginx user for nginx process)
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 -G nodejs
@@ -74,10 +77,9 @@ RUN chown nodejs:nodejs /etc/nginx/conf.d/default.conf && \
 # Change ownership of nginx directories
 RUN chown -R nodejs:nodejs /var/log/nginx /var/cache/nginx /etc/nginx 2>/dev/null || true
 
-
 # Expose port
 EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -q --spider http://localhost/health || exit 1
+  CMD wget -q --spider http://127.0.0.1/health || exit 1
